@@ -261,6 +261,19 @@ Three levels, in order of how much you take on.
 />
 ```
 
+#### Pacing
+
+```tsx
+<AgentProvider minThinkingMs={450}>   // default; 0 shows answers instantly
+```
+
+The deterministic provider answers in single-digit milliseconds. Without a floor the reply
+simply appears, which reads as a canned string rather than something worked out — and a turn
+that did real work looks identical to one that did none. The indicator shows the stage the
+runtime actually reached ("Working out what you need", "Looking through the docs"), so what is
+held is the *display*, never the work: the request has already completed, and an answer that
+takes longer than the floor is never delayed past its own arrival.
+
 ### 2. CSS variables and classes
 
 Every colour comes from a variable on `.ar-root`, so restyling is a few lines in your own

@@ -106,6 +106,17 @@ export interface AgentProviderProps {
   /** Separates stored conversations when several apps share an origin. */
   namespace?: string;
   /**
+   * How long the thinking indicator stays up before the answer lands, in ms.
+   *
+   * The deterministic provider answers in single-digit milliseconds. Without a
+   * floor the reply simply appears, which reads as a canned string rather than
+   * something worked out — and a turn that did real work looks identical to
+   * one that did none. This holds the *display*, never the work: the request
+   * has already finished, and a slow answer is never delayed past its own
+   * arrival. Set 0 to show answers the instant they exist.
+   */
+  minThinkingMs?: number;
+  /**
    * Whether safe browser actions run the moment they are proposed.
    *
    * Defaults to false: navigating someone away from what they were reading,
@@ -209,6 +220,9 @@ function restates(answer: string, summary: string): boolean {
   const b = normalise(summary);
   return Boolean(b) && (a === b || a.startsWith(b) || b.startsWith(a));
 }
+
+/** Long enough to read as a step, short enough not to feel like waiting. */
+const DEFAULT_MIN_THINKING_MS = 450;
 
 let counter = 0;
 const nextId = (prefix: string) => `${prefix}_${++counter}`;
@@ -491,6 +505,15 @@ export function AgentProvider(props: AgentProviderProps) {
   const consume = useCallback(
     async (request: RuntimeRequest) => {
       setStatus("thinking");
+      const startedAt = Date.now();
+      let settled = false;
+      /** Hold the first visible output until the indicator has been legible. */
+      const settle = async () => {
+        if (settled) return;
+        settled = true;
+        const remaining = (props.minThinkingMs ?? DEFAULT_MIN_THINKING_MS) - (Date.now() - startedAt);
+        if (remaining > 0) await new Promise((r) => setTimeout(r, remaining));
+      };
       // Consumed by this request; a new one is set only if we are asked again.
       if (request.kind === "message" && !request.pending) {
         pendingQuestion.current = undefined;
@@ -538,6 +561,7 @@ export function AgentProvider(props: AgentProviderProps) {
               }
               break;
             case "delta":
+              await settle();
               setStatus("streaming");
               setItems((current) => {
                 // Whether the bubble exists is read from `current`, never from a
@@ -559,6 +583,7 @@ export function AgentProvider(props: AgentProviderProps) {
               });
               break;
             case "answer":
+              await settle();
               // The elements already said it. Repeating the same sentence
               // underneath is noise, not confirmation.
               if (shownAsElements && restates(event.text, shownAsElements)) break;
@@ -600,6 +625,7 @@ export function AgentProvider(props: AgentProviderProps) {
               pendingSources = event.sources;
               break;
             case "proposal": {
+              await settle();
               sawProposal = true;
               const proposal = event.proposal;
               proposalsThisTurn.add(proposal.id);
@@ -649,6 +675,7 @@ export function AgentProvider(props: AgentProviderProps) {
               if (Array.isArray(outcome.data) && outcome.data.length > 1) {
                 shownAsElements = outcome.summary;
               }
+              await settle();
               const resultId = nextId("res");
               setItems((current) => [
                 ...current,
@@ -661,6 +688,7 @@ export function AgentProvider(props: AgentProviderProps) {
               // panel, not in the conversation as a failure the user has to
               // interpret.
               if (!event.error.recoverable) {
+                await settle();
                 const errorId = nextId("err");
                 setItems((current) => [
                   ...current,
@@ -702,7 +730,7 @@ export function AgentProvider(props: AgentProviderProps) {
         setStatus((s) => (sawProposal && s === "awaiting-confirmation" ? s : "idle"));
       }
     },
-    [endpoint, localFirst, props.headers]
+    [endpoint, localFirst, props.headers, props.minThinkingMs]
   );
 
   const runClientAction = useCallback(

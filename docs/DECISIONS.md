@@ -475,3 +475,8 @@ A durable operation is still just an action. An executor can back one later with
 - **Theme is not the operating system's business alone.** A host that themes itself with a class
   could not make the panel follow it, because the `prefers-color-scheme` media query outranked
   every variable override. The media query now yields to an explicit `data-theme`.
+- **An instant answer needs a visible moment of work.** The rule-based provider replies in
+  ~5ms; rendering that immediately reads as a canned string, and makes a turn that ran three
+  stages look identical to one that ran none. The first visible output is held until the
+  indicator has been legible (450ms default). It paces the display, never the work — a slow
+  answer is never delayed past its own arrival, and the label names the stage actually reached.

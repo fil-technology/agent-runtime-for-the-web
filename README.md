@@ -197,9 +197,10 @@ The runtime treats "who can answer now" as a routing input, not an afterthought:
   most once per session.
 
 **Installing it in your own app:** [docs/INSTALL.md](docs/INSTALL.md) — install from the
-[v0.1.0 release](https://github.com/fil-technology/agent-runtime-for-the-web/releases/tag/v0.1.0)
+[v0.2.0 release](https://github.com/fil-technology/agent-runtime-for-the-web/releases/tag/v0.2.0)
 tarballs; verified against zod 3 and zod 4. Not on npm yet.
 **Full API reference:** [docs/API.md](docs/API.md).
+**What changed between versions:** [CHANGELOG.md](CHANGELOG.md).
 **Handing the integration to a coding agent:** paste
 [docs/INTEGRATION-PROMPT.md](docs/INTEGRATION-PROMPT.md) to it — that points it at the full
 [docs/AGENT-BRIEF.md](docs/AGENT-BRIEF.md).

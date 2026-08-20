@@ -20,13 +20,13 @@ Where a step below says "report back", it means a short message in the chat.
 ### 1. Install
 
 ```bash
-pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-core-0.1.0.tgz \
-         https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-react-0.1.0.tgz \
-         https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-next-0.1.0.tgz
+pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.2.0/agent-runtime-core-0.2.0.tgz \
+         https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.2.0/agent-runtime-react-0.2.0.tgz \
+         https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.2.0/agent-runtime-next-0.2.0.tgz
 ```
 
 Install the three **in one command**. They depend on each other by version, and adding them
-separately makes the package manager look for `@agent-runtime/core@0.1.0` on the npm registry,
+separately makes the package manager look for `@agent-runtime/core@0.2.0` on the npm registry,
 where it is not yet published.
 
 Once it is published this becomes `pnpm add @agent-runtime/core @agent-runtime/react

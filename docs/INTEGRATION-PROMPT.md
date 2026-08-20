@@ -32,7 +32,7 @@ Reference material — read as needed, do not reproduce or republish it:
 All three in ONE command; they depend on each other by version and are not on
 npm yet. Use this repo's own package manager (npm/pnpm/yarn — check first):
 
-pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-core-0.1.0.tgz https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-react-0.1.0.tgz https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-next-0.1.0.tgz
+pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.2.0/agent-runtime-core-0.2.0.tgz https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.2.0/agent-runtime-react-0.2.0.tgz https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.2.0/agent-runtime-next-0.2.0.tgz
 
 Do NOT add an AI SDK or an API key. The runtime ships a deterministic provider
 that needs no model at all. Get everything working on that first.

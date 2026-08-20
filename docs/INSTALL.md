@@ -1,7 +1,7 @@
 # Installing into an existing application
 
 **Status: released on GitHub, not yet on npm.** Install from the
-[v0.1.0 release tarballs](https://github.com/fil-technology/agent-runtime-for-the-web/releases/tag/v0.1.0).
+[v0.2.0 release tarballs](https://github.com/fil-technology/agent-runtime-for-the-web/releases/tag/v0.2.0).
 
 Verified by installing into a clean project and running the runtime — from the release URLs and
 from local tarballs, against both zod 3.25 and zod 4.4.
@@ -9,13 +9,13 @@ from local tarballs, against both zod 3.25 and zod 4.4.
 ## 1. Install
 
 ```bash
-pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-core-0.1.0.tgz \
-         https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-react-0.1.0.tgz \
-         https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-next-0.1.0.tgz
+pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.2.0/agent-runtime-core-0.2.0.tgz \
+         https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.2.0/agent-runtime-react-0.2.0.tgz \
+         https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.2.0/agent-runtime-next-0.2.0.tgz
 ```
 
 Install them **in one command**. They depend on each other by version, so adding them one at a
-time sends the package manager to the npm registry for `@agent-runtime/core@0.1.0`, which is not
+time sends the package manager to the npm registry for `@agent-runtime/core@0.2.0`, which is not
 published yet.
 
 Installing the repository directly (`github:fil-technology/agent-runtime-for-the-web`) does not
@@ -33,8 +33,8 @@ correctly outside this monorepo.
 ## 2. Optional tiers
 
 ```bash
-pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-cloud-0.1.0.tgz   # AI SDK, Anthropic, OpenAI-compatible
-pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-local-0.1.0.tgz   # on-device models
+pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.2.0/agent-runtime-cloud-0.2.0.tgz   # AI SDK, Anthropic, OpenAI-compatible
+pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.2.0/agent-runtime-local-0.2.0.tgz   # on-device models
 ```
 
 ### Peer dependencies
@@ -142,13 +142,15 @@ publishing you need to:
 
 1. Set a real `repository.url` in each `packages/*/package.json` (currently a placeholder).
 2. Decide whether `@agent-runtime` is a scope you control on npm, or rename.
-3. `git init` and commit — the packages reference a repository that does not exist yet.
-4. `pnpm -r publish --access public`.
+3. `pnpm release` — runs `pnpm verify`, then publishes all five with `--access public`.
 
 ## What is not ready
 
 - **No CI.** Nothing runs `pnpm verify` automatically.
-- **No versioning or changelog.** Everything is 0.1.0.
+- **Releases are immutable from 0.2.0 onward.** A fix means a new version, never a rebuilt
+  file at an existing URL. The `v0.1.0` assets were replaced in place several times during
+  early development and do not identify a single build; [CHANGELOG.md](../CHANGELOG.md)
+  records what each version contains.
 - **The React package ships one opinionated component.** `useAgent()` is headless if you want
   your own; see the notes on shadcn in DECISIONS.md.
 - **`docs()` resolves paths against the working directory.** Correct for a Next.js server;

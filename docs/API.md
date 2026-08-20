@@ -274,6 +274,21 @@ runtime actually reached ("Working out what you need", "Looking through the docs
 held is the *display*, never the work: the request has already completed, and an answer that
 takes longer than the floor is never delayed past its own arrival.
 
+#### Attribution
+
+```tsx
+<AgentChat poweredBy />                                   // mark + "Powered by Agent Runtime"
+<AgentChat poweredBy={{ label: "…", href: "…" }} />       // or your own wording and target
+```
+
+**Off by default.** An SDK that puts its own name inside somebody else's product without being
+asked is the kind of thing that gets torn out wholesale, and a badge nobody chose is worth
+less than one somebody kept.
+
+The mark is an inline SVG drawn in `currentColor` — no asset, no network request, and it takes
+the surrounding text colour in either theme. Export it on its own with
+`import { AgentRuntimeMark } from "@agent-runtime/react"`.
+
 ### 2. CSS variables and classes
 
 Every colour comes from a variable on `.ar-root`, so restyling is a few lines in your own

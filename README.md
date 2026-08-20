@@ -1,3 +1,5 @@
+<img src="docs/assets/logo.svg" width="64" height="64" alt="">
+
 # Agent Runtime for the Web
 
 Make an existing web application operable through language, without the application

@@ -20,7 +20,19 @@ export interface AgentChatProps {
    * rather than the OS. "system" restores the default behaviour.
    */
   theme?: "light" | "dark" | "system";
+  /**
+   * Show a small attribution line under the composer.
+   *
+   * Off by default: an SDK that puts its own name inside somebody else's
+   * product without being asked is the kind of thing that gets torn out
+   * wholesale. `true` uses the default label and link; pass an object to
+   * change either.
+   */
+  poweredBy?: boolean | { label?: string; href?: string };
 }
+
+const POWERED_BY_HREF = "https://github.com/fil-technology/agent-runtime-for-the-web";
+const POWERED_BY_LABEL = "Agent Runtime";
 
 /** How close to the bottom counts as "still following the conversation". */
 const FOLLOW_THRESHOLD_PX = 140;
@@ -76,7 +88,7 @@ export function AgentChat(props: AgentChatProps) {
   }
 
   return (
-    <div className="ar-root">
+    <div className="ar-root" data-theme={props.theme}>
       <div className="ar-panel" role="dialog" aria-label="Assistant">
         <header className="ar-header">
           <span>{props.title ?? agent.identity}</span>
@@ -184,8 +196,52 @@ export function AgentChat(props: AgentChatProps) {
             Send
           </button>
         </div>
+
+        {props.poweredBy ? <PoweredBy poweredBy={props.poweredBy} /> : null}
       </div>
     </div>
+  );
+}
+
+/**
+ * The runtime's mark: a speech bubble around a command prompt.
+ *
+ * Drawn in `currentColor` so it takes the surrounding text colour and needs no
+ * asset, no network request and no theme of its own.
+ */
+export function AgentRuntimeMark({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      className="ar-mark"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.9}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M6 3.2h12a3.8 3.8 0 0 1 3.8 3.8v6.4a3.8 3.8 0 0 1-3.8 3.8h-6.1L6.6 21v-3.8H6A3.8 3.8 0 0 1 2.2 13.4V7A3.8 3.8 0 0 1 6 3.2Z" />
+      <path d="m8.6 8 2.7 2.3-2.7 2.3" />
+      <path d="M13.4 13h4" />
+    </svg>
+  );
+}
+
+function PoweredBy({ poweredBy }: { poweredBy: true | { label?: string; href?: string } }) {
+  const config = poweredBy === true ? {} : poweredBy;
+  return (
+    <a
+      className="ar-powered"
+      href={config.href ?? POWERED_BY_HREF}
+      target="_blank"
+      rel="noreferrer noopener"
+    >
+      <AgentRuntimeMark />
+      <span>Powered by {config.label ?? POWERED_BY_LABEL}</span>
+    </a>
   );
 }
 

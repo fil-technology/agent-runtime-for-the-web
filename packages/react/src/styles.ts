@@ -65,6 +65,15 @@ export const agentStyles = `
 .ar-icon-button:hover { background: var(--ar-surface); color: var(--ar-fg); }
 /* min-height:0 is load-bearing: without it a flex child grows to fit its
    content instead of scrolling, and the transcript silently overflows. */
+.ar-powered {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 7px 12px 9px; font-size: 11px; letter-spacing: .01em;
+  color: var(--ar-muted); text-decoration: none;
+  border-top: 1px solid var(--ar-line);
+}
+.ar-powered:hover { color: var(--ar-fg); }
+.ar-mark { flex: none; opacity: .85; }
+.ar-powered:hover .ar-mark { opacity: 1; }
 .ar-choices {
   display: flex;
   flex-wrap: wrap;

@@ -5,7 +5,7 @@ export type {
   ChatItem,
   ModelStatus,
 } from "./context.js";
-export { AgentChat } from "./AgentChat.js";
+export { AgentChat, AgentRuntimeMark } from "./AgentChat.js";
 export type { AgentChatProps } from "./AgentChat.js";
 export { DebugPanel } from "./DebugPanel.js";
 export { agentStyles, injectStyles } from "./styles.js";

@@ -1,7 +1,9 @@
 # Integration brief
 
 Hand this to a coding agent working inside the application you want to make conversational.
-It is written to be self-contained — paste it as the task.
+It is written to be self-contained — paste it as the task, or paste
+[INTEGRATION-PROMPT.md](INTEGRATION-PROMPT.md) instead, which points here and adds the
+approval gate and verification demands you will want.
 
 ---
 

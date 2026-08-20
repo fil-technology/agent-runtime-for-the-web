@@ -194,8 +194,9 @@ The runtime treats "who can answer now" as a routing input, not an afterthought:
 - A provider that fails a stage is **benched for that stage**, so a bad round trip happens at
   most once per session.
 
-**Installing it in your own app:** [docs/INSTALL.md](docs/INSTALL.md) — not on npm yet; the
-tarball route works today and is verified against zod 3 and zod 4.
+**Installing it in your own app:** [docs/INSTALL.md](docs/INSTALL.md) — install from the
+[v0.1.0 release](https://github.com/fil-technology/agent-runtime-for-the-web/releases/tag/v0.1.0)
+tarballs; verified against zod 3 and zod 4. Not on npm yet.
 **Full API reference:** [docs/API.md](docs/API.md).
 **Handing the integration to a coding agent:** [docs/AGENT-BRIEF.md](docs/AGENT-BRIEF.md).
 

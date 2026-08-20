@@ -1,37 +1,40 @@
 # Installing into an existing application
 
-**Status: not published.** These packages are not on npm and this is not a git repository yet.
-Everything below works today from local tarballs; the npm path is what to do once you publish.
+**Status: released on GitHub, not yet on npm.** Install from the
+[v0.1.0 release tarballs](https://github.com/fil-technology/agent-runtime-for-the-web/releases/tag/v0.1.0).
 
-Verified by installing the tarballs into a clean project and running the runtime, against both
-zod 3.25 and zod 4.4.
+Verified by installing into a clean project and running the runtime — from the release URLs and
+from local tarballs, against both zod 3.25 and zod 4.4.
 
-## 1. Build the tarballs
+## 1. Install
 
 ```bash
-pnpm install && pnpm build
-mkdir -p /tmp/agent-runtime
-for p in core react next local cloud; do
-  (cd packages/$p && pnpm pack --pack-destination /tmp/agent-runtime)
-done
+pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-core-0.1.0.tgz \
+         https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-react-0.1.0.tgz \
+         https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-next-0.1.0.tgz
+```
+
+Install them **in one command**. They depend on each other by version, so adding them one at a
+time sends the package manager to the npm registry for `@agent-runtime/core@0.1.0`, which is not
+published yet.
+
+Installing the repository directly (`github:fil-technology/agent-runtime-for-the-web`) does not
+work — it is a monorepo whose build output is not committed.
+
+### Building the tarballs yourself
+
+```bash
+pnpm install && pnpm pack:all      # writes ./dist-packages/*.tgz
 ```
 
 `pnpm pack` rewrites the internal `workspace:*` links to real versions, so the tarballs install
 correctly outside this monorepo.
 
-## 2. Install them in your app
+## 2. Optional tiers
 
 ```bash
-pnpm add /tmp/agent-runtime/agent-runtime-core-0.1.0.tgz \
-         /tmp/agent-runtime/agent-runtime-react-0.1.0.tgz \
-         /tmp/agent-runtime/agent-runtime-next-0.1.0.tgz
-```
-
-Optional tiers:
-
-```bash
-pnpm add /tmp/agent-runtime/agent-runtime-cloud-0.1.0.tgz   # AI SDK, Anthropic, OpenAI-compatible
-pnpm add /tmp/agent-runtime/agent-runtime-local-0.1.0.tgz   # on-device models
+pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-cloud-0.1.0.tgz   # AI SDK, Anthropic, OpenAI-compatible
+pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-local-0.1.0.tgz   # on-device models
 ```
 
 ### Peer dependencies

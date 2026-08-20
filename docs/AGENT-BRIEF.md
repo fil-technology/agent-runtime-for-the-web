@@ -12,17 +12,23 @@ language, without the language model ever owning product truth or authorization.
 
 ### 1. Install
 
-The packages are not on npm yet. Build tarballs from the runtime repo and install them here:
-
 ```bash
-# in the runtime repo
-pnpm install && pnpm pack:all      # writes ./dist-packages/*.tgz
-
-# in THIS application
-pnpm add /abs/path/to/dist-packages/agent-runtime-core-0.1.0.tgz \
-         /abs/path/to/dist-packages/agent-runtime-react-0.1.0.tgz \
-         /abs/path/to/dist-packages/agent-runtime-next-0.1.0.tgz
+pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-core-0.1.0.tgz \
+         https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-react-0.1.0.tgz \
+         https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.1.0/agent-runtime-next-0.1.0.tgz
 ```
+
+Install the three **in one command**. They depend on each other by version, and adding them
+separately makes the package manager look for `@agent-runtime/core@0.1.0` on the npm registry,
+where it is not yet published.
+
+Once it is published this becomes `pnpm add @agent-runtime/core @agent-runtime/react
+@agent-runtime/next` — check the
+[repository](https://github.com/fil-technology/agent-runtime-for-the-web) first and prefer npm
+if it is there.
+
+Installing the repository itself (`github:fil-technology/agent-runtime-for-the-web`) does **not**
+work: it is a monorepo whose build output is not committed. Use the release tarballs above.
 
 Peer dependencies: `zod` (^3.23 or ^4 — either works) and React 18/19. Nothing else. Do **not**
 add an AI SDK or an API key yet; the runtime works without one.

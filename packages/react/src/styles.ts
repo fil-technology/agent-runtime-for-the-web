@@ -18,11 +18,24 @@ export const agentStyles = `
   position: fixed; right: 20px; bottom: 20px; z-index: 2147483000;
   font-family: var(--ar-font); color: var(--ar-fg);
 }
+/*
+ * Three theme states, in the order they must win.
+ *
+ * The OS preference is only the default. An application that themes itself
+ * with a class or a toggle needs the panel to follow *it*, not the operating
+ * system — otherwise a light page gets a dark chat panel and no amount of
+ * variable overriding fixes it, because the media query keeps winning.
+ * Pass the theme prop to AgentChat, or set data-theme on the root yourself.
+ */
 @media (prefers-color-scheme: dark) {
-  .ar-root {
+  .ar-root:not([data-theme="light"]) {
     --ar-bg: #14161a; --ar-fg: #f2f3f5; --ar-muted: #9aa1ad;
     --ar-line: #272b32; --ar-surface: #1b1e24; --ar-accent: #5b8cff;
   }
+}
+.ar-root[data-theme="dark"] {
+  --ar-bg: #14161a; --ar-fg: #f2f3f5; --ar-muted: #9aa1ad;
+  --ar-line: #272b32; --ar-surface: #1b1e24; --ar-accent: #5b8cff;
 }
 .ar-launcher {
   border: 1px solid var(--ar-line); background: var(--ar-bg); color: var(--ar-fg);

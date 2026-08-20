@@ -294,7 +294,10 @@ function extract(
         continue;
       }
     }
-    if (/query|search|text|term/i.test(field)) {
+    // Field names that mean "what the user is looking for". Deliberately a
+    // list of names rather than a type check: a bare `z.string()` could be
+    // anything, and guessing wrong puts junk into an argument.
+    if (/query|search|text|term|topic|subject|keyword|phrase|question/i.test(field)) {
       value[field] = quoted[0] ?? searchTerms(message, actionName);
       if (!optional) filled += 1;
       continue;

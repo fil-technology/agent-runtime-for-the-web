@@ -38,7 +38,30 @@ Installing the repository itself (`github:fil-technology/agent-runtime-for-the-w
 work: it is a monorepo whose build output is not committed. Use the release tarballs above.
 
 Peer dependencies: `zod` (^3.23 or ^4 — either works) and React 18/19. Nothing else. Do **not**
-add an AI SDK or an API key yet; the runtime works without one.
+add an AI SDK or an API key yet; the runtime routes and acts without one.
+
+### What works without a model, and what does not
+
+The bundled `createFakeProvider()` is rule-based. Get the integration working on it first — but
+know its edges, because they look like bugs when you meet them without warning:
+
+| | Without a model |
+| --- | --- |
+| Routing a sentence to an action | Works — matches on `description` and `examples` |
+| Arguments from page context | Works — `fillFromContext` |
+| Arguments from a candidate list | Works — `resolve`, and enums |
+| Enum / number / quoted-string arguments | Works |
+| Free-text arguments | Works **only** for fields named like a search — `query`, `search`, `term`, `topic`, `subject`, `keyword`, `phrase`, `question` — or a value the sentence spells out after "to"/"called", or in quotes |
+| Answering from `knowledge` | Works for lexical matches; it quotes the matching passage rather than composing an answer |
+| Explaining, comparing, summarising | Does **not** work — needs a real model |
+
+So: give every free-text argument either a `resolve`, a `fillFromContext`, or one of the field
+names above. Anything else will route correctly and then fail to fill, which surfaces as a
+question the user cannot usefully answer.
+
+Configure a cloud or on-device model when you want fluent explanation. Nothing about the action
+surface changes — the same agent definition gets better at the language parts.
+
 
 ### 2. Survey before writing anything
 

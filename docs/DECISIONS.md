@@ -465,3 +465,13 @@ A durable operation is still just an action. An executor can back one later with
   it shipped. Existence is now read from the state passed in, never from a flag.
 - **An affordance hidden behind `:hover` does not exist on a phone.** The "Open →" link on a
   result row was `opacity: 0` until hover — on touch there is no hover, so the row looked inert.
+- **A query term no document contains must not sink retrieval.** It carries the highest idf and
+  can never be matched, so "what does magnitude 6 actually mean?" was defeated by "actually".
+  Coverage is now weighted over the terms the corpus actually holds.
+- **...but weighted coverage alone is then trivially satisfied.** Excluding unanswerable terms
+  let "what is Northwind's stock price?" score a perfect 1.0 on "price", and a question about
+  next week's earthquake got answered from a safety leaflet. A chunk must also contain 40% of
+  the question's own words. Both gates together: +1.3 points, and both refusal cases held.
+- **Theme is not the operating system's business alone.** A host that themes itself with a class
+  could not make the panel follow it, because the `prefers-color-scheme` media query outranked
+  every variable override. The media query now yields to an explicit `data-theme`.

@@ -14,6 +14,12 @@ export interface AgentChatProps {
   /** Render open on mount. */
   defaultOpen?: boolean;
   launcherLabel?: string;
+  /**
+   * Which palette to use. Defaults to the operating system preference; set it
+   * when the host application themes itself, so the panel follows the page
+   * rather than the OS. "system" restores the default behaviour.
+   */
+  theme?: "light" | "dark" | "system";
 }
 
 /** How close to the bottom counts as "still following the conversation". */
@@ -61,7 +67,7 @@ export function AgentChat(props: AgentChatProps) {
 
   if (!open) {
     return (
-      <div className="ar-root">
+      <div className="ar-root" data-theme={props.theme}>
         <button className="ar-launcher" onClick={() => setOpen(true)}>
           {props.launcherLabel ?? `Ask ${props.title ?? agent.identity}`}
         </button>

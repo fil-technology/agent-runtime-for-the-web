@@ -77,6 +77,12 @@ export class Bm25Index {
     return this.documents.length;
   }
 
+  /**
+   * The least of the question's own words a chunk must contain before its
+   * weighted coverage counts for anything.
+   */
+  private static readonly MIN_LITERAL = 0.4;
+
   search(query: string, limit = 4): RetrievedChunk[] {
     if (!this.documents.length) return [];
     const k1 = this.options.k1 ?? 1.5;
@@ -93,24 +99,41 @@ export class Bm25Index {
       const df = this.documentFrequency.get(term) ?? 0;
       return Math.log(1 + (this.documents.length - df + 0.5) / (df + 0.5));
     };
-    const totalIdf = distinctTerms.reduce((sum, term) => sum + idfOf(term), 0) || 1;
+    // Only terms the corpus actually contains. A word in no document cannot
+    // tell one chunk from another, but it carries the *highest* idf — so
+    // "what does magnitude 6 actually mean?" was sunk by "actually", which
+    // outweighed "magnitude" and pushed every chunk under the threshold.
+    // Coverage asks how much of the answerable question a chunk covers.
+    const answerable = distinctTerms.filter(
+      (term) => (this.documentFrequency.get(term) ?? 0) > 0
+    );
+    const totalIdf = answerable.reduce((sum, term) => sum + idfOf(term), 0) || 1;
 
     const scored = this.documents.map((doc) => {
       let score = 0;
       let matchedIdf = 0;
+      let matched = 0;
       for (const term of distinctTerms) {
         const frequency = doc.frequencies.get(term);
         if (!frequency) continue;
+        matched += 1;
         const idf = idfOf(term);
         matchedIdf += idf;
         const norm = 1 - b + (b * doc.length) / (this.averageLength || 1);
         score += idf * ((frequency * (k1 + 1)) / (frequency + k1 * norm));
       }
+      // Weighted coverage alone is trivially satisfied once unanswerable terms
+      // are excluded: "what is Northwind's stock price?" matches on "price" and
+      // nothing else, and scores a perfect 1.0. So a chunk must also contain a
+      // real share of the words the question is actually made of — otherwise
+      // one incidental word makes any document look like an answer, and a
+      // question about next week's earthquake gets answered from a safety leaflet.
+      const literal = matched / distinctTerms.length;
       return {
         ...doc.chunk,
         score,
         rawScore: score,
-        coverage: matchedIdf / totalIdf,
+        coverage: literal < Bm25Index.MIN_LITERAL ? 0 : matchedIdf / totalIdf,
       };
     });
 

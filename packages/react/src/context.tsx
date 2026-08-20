@@ -246,6 +246,7 @@ export function AgentProvider(props: AgentProviderProps) {
   const localRuntime = useRef<AgentRuntime | null>(null);
   // The question the runtime last asked, so the next message answers it.
   const pendingQuestion = useRef<PendingClarification | undefined>(undefined);
+  const shownProposals = useRef(new Set<string>());
   // The last thing an action returned, so "what depth?" can be answered from
   // it instead of re-running anything.
   const recall = useRef<RecallState | undefined>(undefined);
@@ -310,6 +311,7 @@ export function AgentProvider(props: AgentProviderProps) {
     setStatus("idle");
     setActiveStage(undefined);
     pendingQuestion.current = undefined;
+    shownProposals.current = new Set();
     recall.current = undefined;
     lastUserMessage.current = "";
   }, []);
@@ -335,6 +337,7 @@ export function AgentProvider(props: AgentProviderProps) {
         setStatus("idle");
         setActiveStage(undefined);
         pendingQuestion.current = undefined;
+        shownProposals.current = new Set();
         recall.current = undefined;
         lastUserMessage.current = "";
       })();
@@ -501,7 +504,12 @@ export function AgentProvider(props: AgentProviderProps) {
       // Proposal ids seen in this turn. Tracked here rather than derived
       // inside a state updater: updaters run lazily, so a flag set inside one
       // is not visible to the event that arrives next.
-      const proposalsThisTurn = new Set<string>();
+      // Every proposal this conversation has shown a card for — not just this
+      // turn's. Confirming one is a *separate* turn from the one that proposed
+      // it, so a per-turn set never matches on the turn that matters and the
+      // card would sit on "Working…" forever while its result rendered again
+      // underneath as an anonymous element.
+      const proposalsThisTurn = shownProposals.current;
 
       // In local-first mode the loop runs here, so the server resolves the
       // application context up front and the browser runtime treats it as the

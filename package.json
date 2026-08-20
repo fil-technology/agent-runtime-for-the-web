@@ -15,7 +15,8 @@
     "dev:saas": "pnpm --filter saas-demo dev",
     "dev:quake": "pnpm --filter earthquake-demo dev",
     "demos": "pnpm --parallel --filter \"./apps/**\" start",
-    "pack:all": "pnpm build && node scripts/pack-all.mjs"
+    "pack:all": "pnpm build && node scripts/pack-all.mjs",
+    "release": "pnpm verify && pnpm -r --filter \"./packages/**\" publish --access public --no-git-checks"
   },
   "devDependencies": {
     "typescript": "^5.6.3"

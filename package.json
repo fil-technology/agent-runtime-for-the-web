@@ -1,0 +1,23 @@
+{
+  "name": "agent-runtime-for-the-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@9.6.0",
+  "scripts": {
+    "build": "pnpm -r --filter \"./packages/**\" build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter @agent-runtime/core test",
+    "verify": "pnpm build && pnpm test && pnpm eval rules && pnpm -r --filter \"./apps/**\" build",
+    "eval": "pnpm --filter @agent-runtime/eval start",
+    "dev:docs": "pnpm --filter docs-demo dev",
+    "dev:playground": "pnpm --filter playground dev",
+    "dev:saas": "pnpm --filter saas-demo dev",
+    "dev:quake": "pnpm --filter earthquake-demo dev",
+    "demos": "pnpm --parallel --filter \"./apps/**\" start",
+    "pack:all": "pnpm build && node scripts/pack-all.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

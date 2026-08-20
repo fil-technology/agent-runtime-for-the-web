@@ -1,0 +1,19 @@
+node_modules
+dist
+.next
+.turbo
+*.tsbuildinfo
+.env
+.env.local
+eval-results
+
+# macOS
+.DS_Store
+
+# build output
+dist-packages
+
+# model bundler artifacts — these are built, then uploaded to R2
+tools/model-bundle/out
+tools/model-bundle/out-*
+tools/model-bundle/r2-upload

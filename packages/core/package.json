@@ -1,0 +1,60 @@
+{
+  "name": "@agent-runtime/core",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node/index.d.ts",
+      "default": "./dist/node/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.test.*",
+    "!dist/**/*.tsbuildinfo"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsc -p tsconfig.json && node --test \"dist/**/*.test.js\""
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "@types/node": "^22.7.5",
+    "zod": "^3.23.8"
+  },
+  "description": "Framework-independent runtime: agent definitions, permissions, retrieval, model routing.",
+  "license": "MIT",
+  "keywords": [
+    "ai",
+    "agent",
+    "llm",
+    "assistant",
+    "runtime",
+    "chat",
+    "tool-use"
+  ],
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fil-technology/agent-runtime-for-the-web.git",
+    "directory": "packages/core"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "zod": "^3.23.8 || ^4.0.0"
+  },
+  "homepage": "https://github.com/fil-technology/agent-runtime-for-the-web#readme",
+  "bugs": {
+    "url": "https://github.com/fil-technology/agent-runtime-for-the-web/issues"
+  }
+}

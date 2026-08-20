@@ -42,7 +42,6 @@ export function AgentShell({ children }: { children: ReactNode }) {
           "Where can I invite someone?",
           "Rename this project to EarthWatch",
         ]}
-        poweredBy
       />
     </AgentProvider>
   );

@@ -20,15 +20,6 @@ export interface AgentChatProps {
    * rather than the OS. "system" restores the default behaviour.
    */
   theme?: "light" | "dark" | "system";
-  /**
-   * Show a small attribution line under the composer.
-   *
-   * Off by default: an SDK that puts its own name inside somebody else's
-   * product without being asked is the kind of thing that gets torn out
-   * wholesale. `true` uses the default label and link; pass an object to
-   * change either.
-   */
-  poweredBy?: boolean | { label?: string; href?: string };
 }
 
 const POWERED_BY_HREF = "https://github.com/fil-technology/agent-runtime-for-the-web";
@@ -197,7 +188,7 @@ export function AgentChat(props: AgentChatProps) {
           </button>
         </div>
 
-        {props.poweredBy ? <PoweredBy poweredBy={props.poweredBy} /> : null}
+        <PoweredBy />
       </div>
     </div>
   );
@@ -230,17 +221,23 @@ export function AgentRuntimeMark({ size = 14 }: { size?: number }) {
   );
 }
 
-function PoweredBy({ poweredBy }: { poweredBy: true | { label?: string; href?: string } }) {
-  const config = poweredBy === true ? {} : poweredBy;
+/**
+ * Attribution. Always shown, and not configurable.
+ *
+ * Using this package means carrying its name. There is no prop to relabel it,
+ * repoint it or switch it off — those existed briefly and were removed on
+ * purpose, so that every deployment carries the same mark to the same place.
+ */
+function PoweredBy() {
   return (
     <a
       className="ar-powered"
-      href={config.href ?? POWERED_BY_HREF}
+      href={POWERED_BY_HREF}
       target="_blank"
       rel="noreferrer noopener"
     >
       <AgentRuntimeMark />
-      <span>Powered by {config.label ?? POWERED_BY_LABEL}</span>
+      <span>Powered by {POWERED_BY_LABEL}</span>
     </a>
   );
 }

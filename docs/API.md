@@ -276,18 +276,17 @@ takes longer than the floor is never delayed past its own arrival.
 
 #### Attribution
 
-```tsx
-<AgentChat poweredBy />                                   // mark + "Powered by Agent Runtime"
-<AgentChat poweredBy={{ label: "…", href: "…" }} />       // or your own wording and target
-```
+`<AgentChat>` always shows a single line under the composer — the runtime's mark and
+**Powered by Agent Runtime**, linking to the project. There is no prop to relabel it, repoint
+it or switch it off. Using the package means carrying its name.
 
-**Off by default.** An SDK that puts its own name inside somebody else's product without being
-asked is the kind of thing that gets torn out wholesale, and a badge nobody chose is worth
-less than one somebody kept.
+It is one line, 11px, in the muted colour, and it links out in a new tab. The mark is an inline
+SVG drawn in `currentColor`, so it costs no asset and no network request, and it reads correctly
+in either theme. `import { AgentRuntimeMark } from "@agent-runtime/react"` if you want the mark
+somewhere else too.
 
-The mark is an inline SVG drawn in `currentColor` — no asset, no network request, and it takes
-the surrounding text colour in either theme. Export it on its own with
-`import { AgentRuntimeMark } from "@agent-runtime/react"`.
+Building your own UI on `useAgent()` (level 3 below) means you are writing the chrome yourself
+— carry the same line if you do.
 
 ### 2. CSS variables and classes
 

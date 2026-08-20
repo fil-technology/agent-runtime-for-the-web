@@ -480,3 +480,7 @@ A durable operation is still just an action. An executor can back one later with
   stages look identical to one that ran none. The first visible output is held until the
   indicator has been legible (450ms default). It paces the display, never the work — a slow
   answer is never delayed past its own arrival, and the label names the stage actually reached.
+- **Attribution is unconditional.** The mark and "Powered by Agent Runtime" always render, with
+  no prop to relabel, repoint or hide them. Those props existed for one commit and were removed
+  deliberately: the runtime is what makes the product agentic, and every deployment carries the
+  same line to the same place. It is one 11px muted line under the composer.

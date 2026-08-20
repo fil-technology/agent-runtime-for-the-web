@@ -184,14 +184,26 @@ export const agent = defineAgent({
       permission: "confirm",
       input: z.object({
         email: z.string().email(),
-        role: z.enum(["admin", "member"]).default("member"),
+        // Deliberately not defaulted. What access someone gets is worth one
+        // question; quietly picking the safer option is still picking.
+        role: z.enum(["admin", "member"]).describe("What access the new person gets"),
       }),
-      examples: ["invite sam@example.com", "add a teammate"],
+      examples: [
+        "invite sam@example.com",
+        "add a teammate",
+        "add a new member to my team",
+        "add someone to the account",
+        "invite someone",
+      ],
+      clarify: (missing) =>
+        missing.includes("email")
+          ? "What is their email address?"
+          : "What access should they have?",
       confirmLabel: "Send invite",
-      describe: (input) => `Invite ${input.email} as ${input.role ?? "member"}?`,
+      describe: (input) => `Invite ${input.email} as ${input.role}?`,
       execute: async (input) => {
-        const member = inviteMember(input.email, input.role ?? "member");
-        return { summary: `Invited ${member.email}`, data: member };
+        const member = inviteMember(input.email, input.role);
+        return { summary: `Invited ${member.email} as ${member.role}`, data: member };
       },
     }),
 

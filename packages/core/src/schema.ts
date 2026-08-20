@@ -237,4 +237,29 @@ export function extractJson(raw: string): unknown {
 }
 
 /** Shared with the runtime so it does not need its own zod-version handling. */
+/**
+ * The schema for one field of an object input, unwrapped past optional/default.
+ * Returns undefined for anything that is not a plain object schema.
+ */
+export function fieldSchema(schema: ZodTypeAny, field: string): ZodTypeAny | undefined {
+  const found = shapeOf(schema)[field];
+  if (!found) return undefined;
+  let current: ZodTypeAny = found;
+  // optional/default/nullable wrap the thing we actually want to look at.
+  for (let depth = 0; depth < 5; depth += 1) {
+    const kind = typeName(current);
+    if (kind !== "optional" && kind !== "default" && kind !== "nullable") break;
+    const next = inner(current);
+    if (!next) break;
+    current = next;
+  }
+  return current;
+}
+
+/** Enum members of a field, or an empty array when it is not an enum. */
+export function fieldEnumValues(schema: ZodTypeAny, field: string): string[] {
+  const found = fieldSchema(schema, field);
+  return found && typeName(found) === "enum" ? enumValues(found) : [];
+}
+
 export { typeName as schemaTypeName, shapeOf as schemaShape };

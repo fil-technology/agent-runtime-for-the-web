@@ -80,6 +80,23 @@ against the **labels** — so clicking a button and typing "the coastal one" are
 no internal id is ever shown to the user or accepted from them. A reply that names no choice
 re-asks rather than guessing.
 
+**Enums need no resolver.** A `z.enum([...])` field already states its own answers,
+so the runtime offers them as choices without the application repeating them.
+`resolve` is for candidates only the application can know — rows, ids, entities.
+
+**One question at a time.** Gaps are asked about in the order the schema declares
+them, never bundled into "which project and name do you mean?". Answering one and
+being asked the next is progress, so the repeat-question guard only counts repeats
+of the *same* gap; an action needing three arguments can be completed in three
+replies.
+
+**A reply to a one-field question is the value.** Asked "what should I rename it
+to?", the answer "EarthWatch" is taken literally — no extraction call. This applies
+only to fields the user *authors*; an id or a `resolve`-backed field is chosen from
+what exists, so "the one in staging" is never stored as an id. A reply that clearly
+routes elsewhere ("show my invoices") supersedes the question instead of becoming
+its answer, and "cancel" drops it.
+
 Resolvers must return only what this user may act on. Permission is still evaluated afterwards,
 but a resolver that leaks another tenant's rows has already leaked them by naming them.
 

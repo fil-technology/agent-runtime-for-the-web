@@ -438,3 +438,23 @@ A durable operation is still just an action. An executor can back one later with
   an admin invitation. Only the `current*` convention and explicit `fillFromContext` fill inputs.
 - **The interrogative constrains which field answers.** "When does my plan renew" names `plan`
   outright; the question word is what makes `renewsAt` the answer.
+- **Arguments are gathered one question at a time.** A form asks for one field at a
+  time; a conversation has no excuse to be worse. Clarify attempts count repeats of
+  the same gap, not questions in the conversation, or a three-argument action could
+  never be completed.
+- **An enum states its own choices.** Requiring `resolve` for a field that already
+  lists its values would be the application repeating itself.
+- **A reply to a one-field question is read as the value, not extracted from.**
+  Asking a model to find "EarthWatch" inside "EarthWatch" is slower and less
+  reliable than reading it. Restricted to authored fields: an id is chosen from what
+  exists, so free text is never stored as one.
+- **A message spent answering one question is not mined for the next.** Choosing
+  "Coastal Sensors" and then taking "Sensors" from the same two words as its new
+  name is the failure this prevents.
+- **No capability-switching mid-clarification.** The dead-end retry is for a fresh
+  request that picked the wrong action, not for a user part-way through answering.
+- **An enum value that appears in only one of an action's examples is incidental
+  vocabulary.** "add a new member to my team" is how you *ask* for inviteMember, so
+  "member" there is not a choice of role — but navigate's examples name several
+  destinations, which is the enum being taught. One value mentioned means prose;
+  several mean demonstration.

@@ -17,7 +17,13 @@ import { ModelRouter } from "../model/router.js";
 import type { Retriever } from "../knowledge/index.js";
 import { buildRetriever } from "../knowledge/index.js";
 import { evaluatePermission, visibleActions } from "../permissions.js";
-import { objectFields, isOptional, schemaTypeName } from "../schema.js";
+import {
+  objectFields,
+  isOptional,
+  schemaTypeName,
+  fieldSchema,
+  fieldEnumValues,
+} from "../schema.js";
 import {
   AgentError,
   confirmationRequiredError,
@@ -80,7 +86,18 @@ const MIN_COVERAGE = 0.34;
  */
 const WORTH_REWORDING = 0.5;
 /** Ask at most this many times before handing the problem back plainly. */
+/**
+ * How many times the *same* gap may be asked about before giving up.
+ *
+ * Counted per gap, not per conversation: filling in one field and being asked
+ * about the next is progress, not repetition, so a three-field action can be
+ * completed one answer at a time.
+ */
 const MAX_CLARIFY_ATTEMPTS = 2;
+/** How sure a route must be to override an answer to an outstanding question. */
+const RETRY_CONFIDENCE = 0.7;
+/** Ways of saying "stop". */
+const CANCELLED = /^\s*(cancel|nevermind|never mind|stop|forget it|no thanks|abort|drop it)\b/i;
 
 
 /**
@@ -346,9 +363,50 @@ export class AgentRuntime {
       // Naming one of the choices we offered is an answer, however much it
       // also looks like a fresh request. "Seismic Watch" routes to a project
       // search on its own; as a reply to "which project?" it is not one.
+      // "Cancel" is an answer too. Without this the question just gets asked
+      // again, and the only way out is to say something unrelated enough to
+      // supersede it.
+      if (offered && step === 1 && CANCELLED.test(parts.message)) {
+        trace.decision = "clarification";
+        trace.stages.push({
+          stage: "clarify.cancelled",
+          ms: 0,
+          note: `dropped the outstanding ${offered.action} question`,
+        });
+        yield { type: "answer", text: "Cancelled — nothing was changed." };
+        yield* finish();
+        return;
+      }
+
       const namedChoice = offered?.options
         ? matchChoice(parts.message, offered.options.choices)
         : undefined;
+
+      // Answering a question about a single field. "EarthWatch" is not a
+      // sentence to extract from — it is the answer. It also routes like a
+      // fresh request, which is why this is decided before that question is.
+      let answeredGap: { field: string; value: string | number | boolean } | undefined;
+      if (offered && !offered.options && offered.missing.length === 1) {
+        const field = offered.missing[0]!;
+        const target = available.find((a) => a.name === offered.action);
+        // Fields the user *authors* only. An id is chosen from what exists —
+        // "the one in staging" is a description of a project, not its id.
+        const authored =
+          target !== undefined && !/id$/i.test(field) && !target.resolve?.[field];
+        const value = authored
+          ? literalAnswer(parts.message, target!.input as ZodTypeAny, field)
+          : undefined;
+        // ...unless the reply is plainly a request for something else.
+        // "show my invoices" is three words and would otherwise become the
+        // new project name.
+        const divertedElsewhere =
+          routed.type === "action" &&
+          routed.action !== offered.action &&
+          confidence >= RETRY_CONFIDENCE;
+        if (value !== undefined && offered.known[field] === undefined && !divertedElsewhere) {
+          answeredGap = { field, value };
+        }
+      }
 
       // Only the first step may answer an outstanding question. Once a step
       // has run, the turn is about the new request — resuming here would
@@ -357,7 +415,9 @@ export class AgentRuntime {
         step === 1 &&
         !gathered.length &&
         offered &&
-        (routed.type !== "action" || namedChoice !== undefined) &&
+        (routed.type !== "action" ||
+          namedChoice !== undefined ||
+          answeredGap !== undefined) &&
         available.some((a) => a.name === offered.action);
 
       const decision: AgentDecision = resuming
@@ -368,6 +428,18 @@ export class AgentRuntime {
       // Answering a question we attached choices to. Clicking one sends its
       // label, so matching on the label covers both the button and the user
       // typing "the coastal one" — and neither has to know an internal id.
+      if (pending && answeredGap) {
+        pending = {
+          ...pending,
+          known: { ...pending.known, [answeredGap.field]: answeredGap.value },
+        };
+        trace.stages.push({
+          stage: "clarify.answered",
+          ms: 0,
+          note: `${answeredGap.field} taken from the reply`,
+        });
+      }
+
       if (pending?.options && namedChoice) {
         const { field } = pending.options;
         pending = { ...pending, known: { ...pending.known, [field]: namedChoice.value } };
@@ -462,7 +534,8 @@ export class AgentRuntime {
           parts,
           context,
           trace,
-          { context, user, session, requestId, signal: call.signal }
+          { context, user, session, requestId, signal: call.signal },
+          namedChoice !== undefined || answeredGap !== undefined
         );
 
         if (!prepared.ok) {
@@ -472,7 +545,15 @@ export class AgentRuntime {
           // Unless the application already told us what the answers are. A
           // question with two buttons on it beats guessing at a different
           // capability that was not asked for.
-          if (!prepared.options && deadEnds === 0 && available.length > attempted.size + 1) {
+          // Not while the user is part-way through answering for a specific
+          // action. Swapping capability under them mid-flow discards the
+          // answers they have already given.
+          if (
+            !resuming &&
+            !prepared.options &&
+            deadEnds === 0 &&
+            available.length > attempted.size + 1
+          ) {
             deadEnds += 1;
             retrying = true;
             attempted.add(action.name);
@@ -505,7 +586,14 @@ export class AgentRuntime {
             },
           };
 
-          const attempts = (pending?.attempts ?? 0) + 1;
+          // Being asked about a *different* gap means the last answer landed.
+          // Counting that as a repeat would strand any action needing more
+          // than two arguments.
+          const sameGap =
+            pending !== undefined &&
+            pending.missing.length === prepared.missing.length &&
+            pending.missing.every((field) => prepared.missing.includes(field));
+          const attempts = sameGap ? (pending?.attempts ?? 0) + 1 : 1;
           // Repeating a question verbatim reads as broken. Say that the answer
           // did not land, then repeat the guidance once.
           const guidance = prepared.options
@@ -750,7 +838,14 @@ export class AgentRuntime {
     parts: PromptParts,
     context: AgentContext,
     trace: Trace,
-    execution?: ActionExecutionContext
+    execution?: ActionExecutionContext,
+    /**
+     * The user's message was already spent answering an earlier question.
+     * Mining it again fills the *next* gap with a fragment of the last answer
+     * — picking "Coastal Sensors" as the project and then, from the same two
+     * words, "Sensors" as its new name.
+     */
+    consumedMessage = false
   ): AsyncGenerator<
     AgentEvent,
     | { ok: true; input: Record<string, unknown> }
@@ -776,7 +871,7 @@ export class AgentRuntime {
     // Note the deliberate absence of `!parsed.success` here: an input made
     // entirely of optional fields validates while empty, and silently
     // searching for nothing is worse than spending one extraction call.
-    if (needsExtraction(action.input as ZodTypeAny, candidate)) {
+    if (!consumedMessage && needsExtraction(action.input as ZodTypeAny, candidate)) {
       const started = now();
       yield { type: "stage", stage: "extract" };
       try {
@@ -794,6 +889,7 @@ export class AgentRuntime {
             message: parts.message,
             context,
             actionName: action.name,
+            actionPhrases: [action.description, ...(action.examples ?? [])],
             prefilled,
           },
         });
@@ -831,59 +927,91 @@ export class AgentRuntime {
     // Still short a required field. Before treating that as a question for
     // the user, ask the application what the answers even are — it knows, and
     // if there is only one there is nothing to ask about.
-    if (!parsed.success && action.resolve && execution) {
+    //
+    // Gaps are taken in the order the schema declares them, and only the first
+    // outstanding one is ever asked about. A person filling in a form is asked
+    // one thing at a time; there is no reason a conversation should be worse.
+    let askAbout: string | undefined;
+    let askChoices: Choice[] | undefined;
+
+    while (!parsed.success) {
       const gaps = parsed.error.issues.map((i) => i.path.join(".")).filter(Boolean);
-      for (const field of gaps) {
-        const resolver = action.resolve[field];
-        if (!resolver) continue;
-        const started = now();
-        let choices: Choice[];
-        try {
-          choices = await resolver(execution);
-        } catch (error) {
-          this.recordStage(trace, {
-            stage: "resolve.failed",
-            ms: now() - started,
-            note: `${action.name}.${field}: ${(error as Error).message.split("\n")[0]}`,
-          });
-          continue;
-        }
-        if (choices.length === 1) {
-          candidate = { ...candidate, [field]: choices[0]!.value };
-          parsed = action.input.safeParse(candidate);
-          this.recordStage(trace, {
-            stage: "resolve",
-            ms: now() - started,
-            note: `${action.name}.${field} = ${choices[0]!.label} (only candidate)`,
-          });
-          if (parsed.success) break;
-          continue;
-        }
-        if (choices.length > 1) {
-          this.recordStage(trace, {
-            stage: "resolve",
-            ms: now() - started,
-            note: `${action.name}.${field}: ${choices.length} candidates to choose from`,
-          });
-          const known = Object.fromEntries(
-            Object.entries(candidate).filter(([, v]) => v !== undefined)
-          );
-          return {
-            ok: false,
-            error: invalidActionInputError(
-              action.name,
-              action.input,
-              candidate,
-              parsed.error,
-              Object.keys(context)
-            ),
-            known,
-            missing: [field],
-            options: { field, choices },
-            userMessage: `Which ${humaniseField(field)}?`,
-          };
-        }
+      const field = gaps[0];
+      if (!field) break;
+
+      // An enum has already said what its answers are. Making the application
+      // repeat them in a resolver would be busywork.
+      const declared = fieldEnumValues(action.input as ZodTypeAny, field);
+      const resolver = action.resolve?.[field];
+
+      if (!resolver || !execution) {
+        askAbout = field;
+        askChoices = declared.length
+          ? declared.map((value) => ({ value, label: humaniseValue(value) }))
+          : undefined;
+        break;
       }
+
+      const started = now();
+      let choices: Choice[];
+      try {
+        choices = await resolver(execution);
+      } catch (error) {
+        this.recordStage(trace, {
+          stage: "resolve.failed",
+          ms: now() - started,
+          note: `${action.name}.${field}: ${(error as Error).message.split("\n")[0]}`,
+        });
+        askAbout = field;
+        break;
+      }
+
+      // Exactly one candidate is not a choice. Fill it and move to the next gap.
+      if (choices.length === 1) {
+        candidate = { ...candidate, [field]: choices[0]!.value };
+        parsed = action.input.safeParse(candidate);
+        this.recordStage(trace, {
+          stage: "resolve",
+          ms: now() - started,
+          note: `${action.name}.${field} = ${choices[0]!.label} (only candidate)`,
+        });
+        continue;
+      }
+
+      this.recordStage(trace, {
+        stage: "resolve",
+        ms: now() - started,
+        note: `${action.name}.${field}: ${choices.length} candidates to choose from`,
+      });
+      askAbout = field;
+      askChoices = choices.length ? choices : undefined;
+      break;
+    }
+
+    if (!parsed.success && askAbout) {
+      const known = Object.fromEntries(
+        Object.entries(candidate).filter(([, v]) => v !== undefined)
+      );
+      return {
+        ok: false,
+        error: invalidActionInputError(
+          action.name,
+          action.input,
+          candidate,
+          parsed.error,
+          Object.keys(context)
+        ),
+        known,
+        missing: [askAbout],
+        options: askChoices ? { field: askAbout, choices: askChoices } : undefined,
+        userMessage:
+          describeHowToChoose(action, [askAbout], context) ??
+          // "Which" for something picked from what already exists, "what" for
+          // a value the user is making up.
+          (askChoices || /id$/i.test(askAbout) || action.resolve?.[askAbout]
+            ? `Which ${humaniseField(askAbout)}?`
+            : `What ${humaniseField(askAbout)}?`),
+      };
     }
 
     if (!parsed.success) {
@@ -1476,6 +1604,12 @@ function capitalise(value: string): string {
   return /[.!?]$/.test(text) ? text : `${text}.`;
 }
 
+/** An enum member as a person would read it: "member" -> "Member". */
+function humaniseValue(value: string): string {
+  const spaced = value.replace(/[_-]+/g, " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
 function humaniseField(field: string): string {
   const withoutId = field.replace(/Id$/, "");
   return withoutId
@@ -1526,6 +1660,39 @@ function matchChoice(message: string, choices: Choice[]): Choice | undefined {
   // Naming half of each of two labels names neither.
   if (!best || best.score < 0.5 || best.score === runnerUp) return undefined;
   return best.choice;
+}
+
+/**
+ * The user's reply, read as the value of the one field we asked about.
+ *
+ * Deliberately narrow: only scalar fields, only a short reply. A paragraph is
+ * not somebody answering "what should I call it?", and a number field is not
+ * satisfied by the word "yes".
+ */
+function literalAnswer(
+  message: string,
+  input: ZodTypeAny,
+  field: string
+): string | number | boolean | undefined {
+  const text = message.trim().replace(/^["'“”]|["'“”.!]$/g, "").trim();
+  if (!text || text.length > 80) return undefined;
+
+  const options = fieldEnumValues(input, field);
+  if (options.length) {
+    const said = text.toLowerCase();
+    return options.find((o) => o.toLowerCase() === said);
+  }
+
+  const kind = schemaTypeName(fieldSchema(input, field) ?? (undefined as any));
+  if (kind === "number") {
+    const parsed = Number(text.replace(/[^\d.-]/g, ""));
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  if (kind !== "string") return undefined;
+
+  // A whole request is not an answer to "what should I call it?".
+  if (/\s/.test(text) && text.split(/\s+/).length > 8) return undefined;
+  return text;
 }
 
 function now(): number {

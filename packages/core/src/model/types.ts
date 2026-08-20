@@ -54,6 +54,14 @@ export interface StageHints {
   context?: Record<string, unknown>;
   actions?: Array<{ name: string; description: string; examples?: string[] }>;
   actionName?: string;
+  /**
+   * How this action describes itself — its description and examples.
+   *
+   * Words the action already uses are not evidence about its arguments:
+   * "add a new member to my team" contains "member", which is also a role,
+   * but the sentence is how you *ask* for the action, not a choice of role.
+   */
+  actionPhrases?: string[];
   /** Actions already tried this turn, so a second step looks somewhere new. */
   attempted?: string[];
   /**

@@ -277,15 +277,27 @@ const saas: EvalCase[] = [
     tags: ["write", "destructive"],
   },
   {
+    // What access someone gets is not a detail to infer. The action declares
+    // `role` required, so a bare email is a half-finished request and the
+    // right answer is a question, not a guess.
     id: "saas-write-5",
     suite: "saas",
     question: "Invite sam@example.com",
     page: OVERVIEW,
     session: ADMIN,
+    expect: { kind: "clarification" },
+    tags: ["write", "args", "clarify"],
+  },
+  {
+    id: "saas-write-7",
+    suite: "saas",
+    question: "Invite sam@example.com as an admin",
+    page: OVERVIEW,
+    session: ADMIN,
     expect: {
       kind: "action",
       action: "inviteMember",
-      args: { email: "sam@example.com" },
+      args: { email: "sam@example.com", role: "admin" },
       requiresConfirmation: true,
     },
     tags: ["write", "args"],

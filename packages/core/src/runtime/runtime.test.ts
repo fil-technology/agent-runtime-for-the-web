@@ -938,3 +938,122 @@ test("context is not blind-matched onto action inputs by name", async () => {
   assert.equal(turn.proposal?.input.email, "sam@example.com");
   assert.notEqual(turn.proposal?.input.role, "admin");
 });
+
+/* ------------------------------------------------------------------ *
+ * Filling several arguments one question at a time
+ * ------------------------------------------------------------------ */
+
+function invitingAgent() {
+  const invited: Array<Record<string, unknown>> = [];
+  const agent = defineAgent({
+    identity: "Test",
+    context: () => ({}),
+    actions: {
+      inviteMember: action({
+        description: "Invite someone to the account by email",
+        permission: "confirm",
+        input: z.object({
+          email: z.string().email(),
+          role: z.enum(["admin", "member"]),
+        }),
+        examples: ["invite someone", "add a new member to my team"],
+        execute: async (input) => {
+          invited.push(input);
+          return { summary: `Invited ${input.email}` };
+        },
+      }),
+      listInvoices: action({
+        description: "List the invoices on the account",
+        permission: "auto",
+        input: z.object({}),
+        examples: ["show my invoices"],
+        execute: async () => ({ summary: "3 invoices" }),
+      }),
+    },
+  });
+  return { agent, invited };
+}
+
+test("arguments are gathered one question at a time, in schema order", async () => {
+  const { agent } = invitingAgent();
+  const runtime = new AgentRuntime({ agent, providers: [createFakeProvider()] });
+  const page = { route: "/" };
+
+  // Asked about the first gap only — not both at once.
+  const first = await runtime.handle({
+    kind: "message",
+    message: "add a new member to my team",
+    page,
+  });
+  assert.deepEqual(first.pending?.missing, ["email"]);
+  assert.equal(first.pending?.options, undefined, "an email has no choices to offer");
+
+  // The reply is the answer, and the *next* gap is asked about.
+  const second = await runtime.handle({
+    kind: "message",
+    message: "sam@example.com",
+    page,
+    pending: first.pending,
+  });
+  assert.deepEqual(second.pending?.missing, ["role"]);
+  assert.equal(second.pending?.known.email, "sam@example.com", "the first answer survives");
+  // An enum knows its own answers without the application restating them.
+  assert.deepEqual(
+    second.pending?.options?.choices.map((c) => c.label),
+    ["Admin", "Member"]
+  );
+
+  const third = await runtime.handle({
+    kind: "message",
+    message: "admin",
+    page,
+    pending: second.pending,
+  });
+  assert.equal(third.proposal?.input.email, "sam@example.com");
+  assert.equal(third.proposal?.input.role, "admin");
+});
+
+test("a question can be cancelled", async () => {
+  const { agent, invited } = invitingAgent();
+  const runtime = new AgentRuntime({ agent, providers: [createFakeProvider()] });
+  const page = { route: "/" };
+
+  const asked = await runtime.handle({
+    kind: "message",
+    message: "add a new member to my team",
+    page,
+  });
+  const stopped = await runtime.handle({
+    kind: "message",
+    message: "cancel",
+    page,
+    pending: asked.pending,
+  });
+
+  assert.equal(stopped.pending, undefined, "the question is dropped, not repeated");
+  assert.equal(stopped.proposal, undefined);
+  assert.equal(invited.length, 0);
+  assert.match(stopped.answer ?? "", /cancelled/i);
+});
+
+test("a plain request beats a half-finished one rather than becoming its answer", async () => {
+  const { agent } = invitingAgent();
+  const runtime = new AgentRuntime({ agent, providers: [createFakeProvider()] });
+  const page = { route: "/" };
+
+  const asked = await runtime.handle({
+    kind: "message",
+    message: "invite someone",
+    page,
+  });
+  const diverted = await runtime.handle({
+    kind: "message",
+    message: "show my invoices",
+    page,
+    pending: asked.pending,
+  });
+
+  // Three short words would otherwise be read as an email address.
+  assert.equal(diverted.outcomes[0]?.action, "listInvoices");
+  assert.notEqual(diverted.pending?.known.email, "show my invoices");
+});

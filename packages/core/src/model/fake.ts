@@ -102,7 +102,8 @@ export function createFakeProvider(options: FakeProviderOptions = {}): ModelProv
           stage.message ?? "",
           stage.context ?? {},
           stage.prefilled ?? {},
-          stage.actionName
+          stage.actionName,
+          stage.actionPhrases
         );
         value = extracted.value;
         confidence = extracted.confidence;
@@ -207,7 +208,8 @@ function extract(
   message: string,
   context: Record<string, unknown>,
   prefilled: Record<string, unknown>,
-  actionName?: string
+  actionName?: string,
+  actionPhrases?: string[]
 ): { value: Record<string, unknown>; confidence: number } {
   const value: Record<string, unknown> = { ...prefilled };
   const fields = objectFields(schema);
@@ -238,7 +240,7 @@ function extract(
     }
     const enumValues = fieldSchema ? enumOptions(fieldSchema) : undefined;
     if (enumValues?.length) {
-      const picked = pickEnum(message, enumValues);
+      const picked = pickEnum(message, enumValues, actionPhrases);
       if (picked) {
         value[field] = picked;
         if (!optional) filled += 1;
@@ -366,8 +368,27 @@ function enumOptions(schema: ZodTypeAny): string[] | undefined {
 }
 
 /** Closed sets are what small models and rule-based routers do best. */
-function pickEnum(message: string, options: string[]): string | undefined {
+function pickEnum(
+  message: string,
+  options: string[],
+  actionPhrases?: string[]
+): string | undefined {
   const messageTokens = new Set(tokenize(message));
+  const incidental = incidentalOption(options, actionPhrases);
+  // The one option that is really just a word in the action's own name needs
+  // to be said as a choice, not merely be present: "invite sam as a member"
+  // picks the role, "add a new member to my team" is how you ask for the
+  // action at all.
+  if (incidental) {
+    const said = message.trim().toLowerCase().replace(/[.!?]$/, "");
+    const qualified = new RegExp(
+      `\\b(as|role|access|permission)\\b[\\w\\s]{0,12}\\b${incidental}\\b|\\b${incidental}\\b\\s+(role|access)`,
+      "i"
+    );
+    if (said !== incidental.toLowerCase() && !qualified.test(message)) {
+      messageTokens.delete(incidental.toLowerCase());
+    }
+  }
   let best: { value: string; score: number } | undefined;
   for (const option of options) {
     const optionTokens = tokenize(splitCamel(option));
@@ -377,6 +398,24 @@ function pickEnum(message: string, options: string[]): string | undefined {
     if (score > 0 && (!best || score > best.score)) best = { value: option, score };
   }
   return best && best.score >= 0.5 ? best.value : undefined;
+}
+
+/**
+ * The enum member that appears in the action's own phrasing by coincidence.
+ *
+ * When examples mention *several* of an enum's values they are demonstrating
+ * the argument — "take me to billing", "go to the team page" teach navigate's
+ * destinations, and stripping them would leave nothing to match on. When only
+ * one value shows up it is part of how the action is named, not a value being
+ * taught: inviteMember's examples say "member" and never say "admin".
+ */
+function incidentalOption(options: string[], actionPhrases?: string[]): string | undefined {
+  if (!actionPhrases?.length || options.length < 2) return undefined;
+  const phraseTokens = new Set(actionPhrases.flatMap((p) => tokenize(splitCamel(p))));
+  const mentioned = options.filter((option) =>
+    tokenize(splitCamel(option)).every((t) => phraseTokens.has(t))
+  );
+  return mentioned.length === 1 ? mentioned[0] : undefined;
 }
 
 /** Words that follow "in"/"near" without naming a place. */

@@ -54,6 +54,36 @@ Two things follow:
 
 Tokenizer JSON is a different story and does compress well: 2.0 MB → 0.5 MB.
 
+## Which small model — measured, not quoted
+
+Parameter count is the wrong axis. What a browser downloads is the ONNX build,
+and for the tool-calling models people recommend, the published headline size is
+usually a GGUF or LiteRT build that transformers.js cannot load.
+
+Smallest usable ONNX weights, read from the Hugging Face API on 2026-08-20:
+
+| Model | Smallest ONNX | Tokenizer | Notes |
+| --- | --- | --- | --- |
+| SmolLM2-360M-Instruct | **273 MB** (`q4f16`) | 0.5 MB | what we ship; 230 MB after compression on R2 |
+| FunctionGemma-270M-it | **426 MB** (`q4f16`) | 20.3 MB | weights live in external `.onnx_data`; the widely quoted "284 MB" is the GGUF build |
+| Qwen3-0.6B | **315 MB** (`model.onnx`) | 11.4 MB | `q4f16` is 570 MB |
+
+FunctionGemma is *270M parameters* and still the largest download of the three.
+Gemma's 262k-token vocabulary means the embedding table dominates, and its
+tokenizer alone is 40× SmolLM2's. "Smaller model" and "smaller download" are not
+the same claim.
+
+That does **not** settle it. FunctionGemma is purpose-built for schema-constrained
+function calling, which is exactly the routing and extraction this runtime asks a
+model to do, and our measured verdict on SmolLM2-360M is that it is barely
+adequate. A model that is 1.6× the download and materially more accurate at
+picking an action may well be the better trade.
+
+The way to decide that is `pnpm eval`, not a spec sheet. The 77-case suite already
+scores intent accuracy, argument accuracy and the safety invariant, so a candidate
+can be wired up as a profile and compared against the same numbers as everything
+else. Until that has been run, treat all three as candidates.
+
 ## Building the bundle
 
 ```bash

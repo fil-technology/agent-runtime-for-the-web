@@ -34,15 +34,19 @@ export function AgentShell({ children }: { children: ReactNode }) {
       debug
     >
       {children}
-      <AgentChat
-        title="Northwind Assistant"
-        suggestions={[
-          "When does my plan renew?",
-          "Show my invoices",
-          "Where can I invite someone?",
-          "Rename this project to EarthWatch",
-        ]}
-      />
+      {/* The corner panel would be a second way into the same conversation on
+          the page that already is one. */}
+      {!pathname.startsWith("/assistant") && (
+          <AgentChat
+          title="Northwind Assistant"
+          suggestions={[
+            "When does my plan renew?",
+            "Show my invoices",
+            "Where can I invite someone?",
+            "Rename this project to EarthWatch",
+          ]}
+        />
+      )}
     </AgentProvider>
   );
 }

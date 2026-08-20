@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.3.0
+
+### Added
+
+- **`<AgentPage>`** — the assistant as a page of its own, for mounting on a route. Same turns,
+  cards and permission engine as the corner panel; only the chrome differs. It fills its
+  container rather than positioning itself, so it sits inside a layout that already has a
+  header and navigation. `sidebar` (default on, hidden below 760px) puts past conversations
+  beside the thread with a "New chat" button.
+
+### Changed
+
+- The component internals moved to an internal `parts` module shared by both layouts. No
+  public API changed: `AgentChat`, `AgentRuntimeMark` and everything else are exported as
+  before.
+
 ## 0.2.0
 
 ### Fixed

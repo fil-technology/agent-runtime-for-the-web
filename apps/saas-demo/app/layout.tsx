@@ -31,6 +31,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <Link href="/settings/team">Team</Link>
                 <Link href="/settings/billing">Billing</Link>
                 <Link href="/settings/api-keys">API keys</Link>
+                <div className="section">Assistant</div>
+                <Link href="/assistant">Full page chat</Link>
               </nav>
             </aside>
             <main className="main">{children}</main>

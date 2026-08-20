@@ -37,6 +37,39 @@ export const agentStyles = `
   --ar-bg: #14161a; --ar-fg: #f2f3f5; --ar-muted: #9aa1ad;
   --ar-line: #272b32; --ar-surface: #1b1e24; --ar-accent: #5b8cff;
 }
+/* The page layout fills what it is given rather than positioning itself, so it
+   drops into a host layout that already has a header without fighting it. */
+.ar-root-page { position: static; inset: auto; width: 100%; height: 100%; }
+.ar-page { display: flex; height: 100%; min-height: 0; background: var(--ar-bg); }
+.ar-side {
+  flex: 0 0 240px; display: flex; flex-direction: column; min-height: 0;
+  border-right: 1px solid var(--ar-line); background: var(--ar-surface); padding: 12px;
+}
+.ar-new {
+  flex: none; margin-bottom: 10px; padding: 9px 12px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--ar-line); background: var(--ar-bg); color: var(--ar-fg);
+  font: inherit; font-size: 13px; font-weight: 550; text-align: left;
+}
+.ar-new:hover { border-color: var(--ar-accent); }
+.ar-side .ar-history { border: none; background: none; padding: 0; max-height: none; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.ar-main { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.ar-page-header {
+  display: flex; align-items: center; gap: 9px; padding: 14px 20px; flex: 0 0 auto;
+  border-bottom: 1px solid var(--ar-line);
+}
+.ar-page-messages { padding: 20px 20px 8px; }
+/* A line of text is unreadable at full window width. */
+.ar-column { width: 100%; max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.ar-page-foot { flex: 0 0 auto; padding: 0 20px 4px; }
+.ar-page-foot .ar-column { gap: 0; }
+.ar-page-foot .ar-composer { margin: 0; }
+.ar-empty-page { padding-top: 12vh; }
+@media (max-width: 760px) {
+  .ar-side { display: none; }
+  .ar-page-messages { padding: 14px 14px 6px; }
+  .ar-page-header { padding: 12px 14px; }
+  .ar-page-foot { padding: 0 14px 4px; }
+}
 .ar-launcher {
   border: 1px solid var(--ar-line); background: var(--ar-bg); color: var(--ar-fg);
   border-radius: 999px; padding: 10px 18px; font-size: 14px; font-weight: 550;

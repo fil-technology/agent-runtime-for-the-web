@@ -484,3 +484,9 @@ A durable operation is still just an action. An executor can back one later with
   no prop to relabel, repoint or hide them. Those props existed for one commit and were removed
   deliberately: the runtime is what makes the product agentic, and every deployment carries the
   same line to the same place. It is one 11px muted line under the composer.
+- **Two layouts, one set of parts.** `AgentChat` and `AgentPage` share every internal — turns,
+  cards, choices, sources, loader, attribution — through `parts.tsx`. Forking the panel into a
+  page would have guaranteed they drifted, and the drift would land on whichever one was used
+  less.
+- **The page fills its container instead of positioning itself.** A full-page assistant that
+  fixes itself to the viewport cannot coexist with the host's own header and navigation.

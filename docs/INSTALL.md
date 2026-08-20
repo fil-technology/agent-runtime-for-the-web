@@ -1,7 +1,7 @@
 # Installing into an existing application
 
 **Status: released on GitHub, not yet on npm.** Install from the
-[v0.2.0 release tarballs](https://github.com/fil-technology/agent-runtime-for-the-web/releases/tag/v0.2.0).
+[v0.3.0 release tarballs](https://github.com/fil-technology/agent-runtime-for-the-web/releases/tag/v0.3.0).
 
 Verified by installing into a clean project and running the runtime — from the release URLs and
 from local tarballs, against both zod 3.25 and zod 4.4.
@@ -9,13 +9,13 @@ from local tarballs, against both zod 3.25 and zod 4.4.
 ## 1. Install
 
 ```bash
-pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.2.0/agent-runtime-core-0.2.0.tgz \
-         https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.2.0/agent-runtime-react-0.2.0.tgz \
-         https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.2.0/agent-runtime-next-0.2.0.tgz
+pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.3.0/agent-runtime-core-0.3.0.tgz \
+         https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.3.0/agent-runtime-react-0.3.0.tgz \
+         https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.3.0/agent-runtime-next-0.3.0.tgz
 ```
 
 Install them **in one command**. They depend on each other by version, so adding them one at a
-time sends the package manager to the npm registry for `@agent-runtime/core@0.2.0`, which is not
+time sends the package manager to the npm registry for `@agent-runtime/core@0.3.0`, which is not
 published yet.
 
 Installing the repository directly (`github:fil-technology/agent-runtime-for-the-web`) does not
@@ -33,8 +33,8 @@ correctly outside this monorepo.
 ## 2. Optional tiers
 
 ```bash
-pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.2.0/agent-runtime-cloud-0.2.0.tgz   # AI SDK, Anthropic, OpenAI-compatible
-pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.2.0/agent-runtime-local-0.2.0.tgz   # on-device models
+pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.3.0/agent-runtime-cloud-0.3.0.tgz   # AI SDK, Anthropic, OpenAI-compatible
+pnpm add https://github.com/fil-technology/agent-runtime-for-the-web/releases/download/v0.3.0/agent-runtime-local-0.3.0.tgz   # on-device models
 ```
 
 ### Peer dependencies

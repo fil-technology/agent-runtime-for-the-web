@@ -245,6 +245,46 @@ createLocalProvider({
 createEngine, hasWebGpu, loadTransformers
 ```
 
+## Two layouts
+
+`<AgentChat>` is a panel in the corner of an existing page. `<AgentPage>` is the same
+assistant given a page of its own — same turns, same confirmation cards, same permission
+engine; only the chrome differs.
+
+```tsx
+// app/assistant/page.tsx
+"use client";
+import { AgentPage } from "@agent-runtime/react";
+
+export default function Assistant() {
+  return (
+    <div style={{ height: "calc(100vh - 64px)", display: "flex" }}>
+      <AgentPage
+        title="Northwind Assistant"
+        subtitle="Ask about your account, projects and billing"
+        suggestions={["When does my plan renew?", "Show my invoices"]}
+      />
+    </div>
+  );
+}
+```
+
+**Give it a container with a height.** It fills what it is given rather than positioning
+itself, which is what lets it sit inside a layout that already has a header and navigation
+instead of covering them.
+
+`sidebar` (default `true`) puts past conversations in a column beside the thread, with a
+"New chat" button. A page has the room, and a full-page assistant that cannot reach
+yesterday's conversation is a worse product than the corner panel it replaced. It hides
+itself below 760px.
+
+Both live under the same `<AgentProvider>`. If you render both, hide the panel on the route
+that *is* the assistant — otherwise you have offered two doors into one conversation:
+
+```tsx
+{!pathname.startsWith("/assistant") && <AgentChat … />}
+```
+
 ## Customising the chat UI
 
 Three levels, in order of how much you take on.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { ActionProposal, AnswerSource, Choice } from "@agent-runtime/core";
 import { useAgent, type ChatItem } from "./context.js";
 import { injectStyles } from "./styles.js";
@@ -14,6 +14,8 @@ export interface AgentChatProps {
   /** Render open on mount. */
   defaultOpen?: boolean;
   launcherLabel?: string;
+  /** The line under the title. Says what this assistant is for. */
+  subtitle?: string;
   /**
    * Which palette to use. Defaults to the operating system preference; set it
    * when the host application themes itself, so the panel follows the page
@@ -82,7 +84,15 @@ export function AgentChat(props: AgentChatProps) {
     <div className="ar-root" data-theme={props.theme}>
       <div className="ar-panel" role="dialog" aria-label="Assistant">
         <header className="ar-header">
-          <span>{props.title ?? agent.identity}</span>
+          <span className="ar-brand">
+            <AgentRuntimeMark size={15} />
+          </span>
+          <span className="ar-titles">
+            <span className="ar-title">{props.title ?? agent.identity}</span>
+            <span className="ar-subtitle">
+              {props.subtitle ?? "Ask about this page, or tell me what to do"}
+            </span>
+          </span>
           <span className="ar-header-spacer" />
           {agent.modelStatus.local === "unavailable" && agent.debug && (
             <span className="ar-chip" title={agent.modelStatus.detail}>
@@ -138,8 +148,14 @@ export function AgentChat(props: AgentChatProps) {
         <div className="ar-messages" ref={scroller}>
           {agent.items.length === 0 && (
             <div className="ar-empty">
-              Ask about this page, or tell me what you want to do. I can only use
-              this product's own documentation, data and actions.
+              <span className="ar-empty-mark">
+                <AgentRuntimeMark size={26} />
+              </span>
+              <span className="ar-empty-title">{props.title ?? agent.identity}</span>
+              <span className="ar-empty-lead">How can I help you today?</span>
+              <span className="ar-empty-note">
+                I can only use this product's own documentation, data and actions.
+              </span>
               {props.suggestions?.length ? (
                 <div className="ar-suggestions">
                   {props.suggestions.map((s) => (
@@ -157,7 +173,7 @@ export function AgentChat(props: AgentChatProps) {
           )}
 
           {agent.items.map((item) => (
-            <Item key={item.id} item={item} />
+            <Item key={item.id} item={item} agentName={props.title ?? agent.identity} />
           ))}
 
           {agent.status === "thinking" && <Thinking />}
@@ -180,15 +196,20 @@ export function AgentChat(props: AgentChatProps) {
             }}
           />
           <button
-            className="ar-button ar-button-primary"
+            className="ar-send"
             onClick={submit}
             disabled={busy || !draft.trim()}
+            title="Send"
+            aria-label="Send"
           >
-            Send
+            ↑
           </button>
         </div>
 
-        <PoweredBy />
+        <footer className="ar-footer">
+          <span className="ar-hint">Enter to send · Shift ↵ for a new line</span>
+          <PoweredBy />
+        </footer>
       </div>
     </div>
   );
@@ -401,6 +422,9 @@ function Thinking() {
 
   return (
     <div className="ar-thinking">
+      <span className="ar-avatar">
+        <AgentRuntimeMark size={12} />
+      </span>
       <span className="ar-dots">
         <span className="ar-dot" />
         <span className="ar-dot" />
@@ -415,25 +439,55 @@ function Thinking() {
   );
 }
 
-function Item({ item }: { item: ChatItem }) {
+/** "Today 12:29AM" — a time only, because a chat panel is a today-shaped thing. */
+function when(at: number | undefined): string {
+  if (!at) return "";
+  const then = new Date(at);
+  const time = then.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const sameDay = new Date().toDateString() === then.toDateString();
+  return sameDay ? `Today ${time}` : `${then.toLocaleDateString()} ${time}`;
+}
+
+function Turn({ who, at, children }: { who: string; at?: number; children: ReactNode }) {
+  return (
+    <div className="ar-turn">
+      <div className="ar-turn-meta">
+        <span>{who}</span>
+        <span className="ar-turn-time">{when(at)}</span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Item({ item, agentName }: { item: ChatItem; agentName: string }) {
   const agent = useAgent();
 
   if (item.kind === "user") {
-    return <div className="ar-msg ar-msg-user">{item.text}</div>;
+    return (
+      <Turn who="You" at={item.at}>
+        <div className="ar-msg ar-msg-user">{item.text}</div>
+      </Turn>
+    );
   }
 
   if (item.kind === "assistant") {
     return (
-      <>
-        <div className="ar-msg ar-msg-assistant">
-          {item.text}
-          {item.streaming && <span className="ar-cursor">▍</span>}
+      <Turn who={agentName} at={item.at}>
+        <div className="ar-said">
+          <span className="ar-avatar">
+            <AgentRuntimeMark size={12} />
+          </span>
+          <div className="ar-msg ar-msg-assistant">
+            {item.text}
+            {item.streaming && <span className="ar-cursor">▍</span>}
+          </div>
         </div>
         {!item.streaming && item.choices?.length ? (
           <Choices choices={item.choices} />
         ) : null}
         {!item.streaming && item.sources?.length ? <Sources sources={item.sources} /> : null}
-      </>
+      </Turn>
     );
   }
 
@@ -451,9 +505,21 @@ function Item({ item }: { item: ChatItem }) {
     );
   }
 
-  if (item.kind === "result") return <ResultCard item={item} />;
+  // Cards come from the assistant too, and a block with no attribution reads
+  // as though it arrived from nowhere.
+  if (item.kind === "result") {
+    return (
+      <Turn who={agentName} at={item.at}>
+        <ResultCard item={item} />
+      </Turn>
+    );
+  }
 
-  return <ProposalCard item={item} />;
+  return (
+    <Turn who={agentName} at={item.at}>
+      <ProposalCard item={item} />
+    </Turn>
+  );
 }
 
 /**

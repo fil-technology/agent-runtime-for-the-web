@@ -36,11 +36,12 @@ import {
 } from "./conversations.js";
 
 export type ChatItem =
-  | { id: string; kind: "user"; text: string }
+  | { id: string; kind: "user"; text: string; at: number }
   | {
       id: string;
       kind: "assistant";
       text: string;
+      at: number;
       streaming: boolean;
       /** Documentation this answer drew on. */
       sources?: AnswerSource[];
@@ -50,6 +51,7 @@ export type ChatItem =
   | {
       id: string;
       kind: "proposal";
+      at: number;
       proposal: ActionProposal;
       status: "pending" | "running" | "done" | "failed" | "declined" | "expired";
       outcome?: ActionOutcome;
@@ -57,10 +59,11 @@ export type ChatItem =
   | {
       id: string;
       kind: "error";
+      at: number;
       error: { code: string; message: string; hint?: string };
     }
   /** Structured data an action returned, rendered as elements rather than prose. */
-  | { id: string; kind: "result"; action: string; outcome: ActionOutcome };
+  | { id: string; kind: "result"; at: number; action: string; outcome: ActionOutcome };
 
 export type AgentStatus = "idle" | "thinking" | "streaming" | "awaiting-confirmation";
 
@@ -572,7 +575,13 @@ export function AgentProvider(props: AgentProviderProps) {
                 if (!current.some((i) => i.id === assistantId)) {
                   return [
                     ...current,
-                    { id: assistantId, kind: "assistant", text: event.text, streaming: true },
+                    {
+                      id: assistantId,
+                      kind: "assistant",
+                      at: Date.now(),
+                      text: event.text,
+                      streaming: true,
+                    },
                   ];
                 }
                 return current.map((item) =>
@@ -594,6 +603,7 @@ export function AgentProvider(props: AgentProviderProps) {
                     {
                       id: assistantId,
                       kind: "assistant",
+                      at: Date.now(),
                       text: event.text,
                       streaming: false,
                       sources: pendingSources,
@@ -632,7 +642,7 @@ export function AgentProvider(props: AgentProviderProps) {
               const itemId = nextId("prop");
               setItems((current) => [
                 ...current,
-                { id: itemId, kind: "proposal", proposal, status: "pending" },
+                { id: itemId, kind: "proposal", at: Date.now(), proposal, status: "pending" },
               ]);
               if (
                 proposal.permission === "auto" &&
@@ -679,7 +689,7 @@ export function AgentProvider(props: AgentProviderProps) {
               const resultId = nextId("res");
               setItems((current) => [
                 ...current,
-                { id: resultId, kind: "result", action: outcome.action, outcome },
+                { id: resultId, kind: "result", at: Date.now(), action: outcome.action, outcome },
               ]);
               break;
             }
@@ -692,7 +702,7 @@ export function AgentProvider(props: AgentProviderProps) {
                 const errorId = nextId("err");
                 setItems((current) => [
                   ...current,
-                  { id: errorId, kind: "error", error: event.error },
+                  { id: errorId, kind: "error", at: Date.now(), error: event.error },
                 ]);
               }
               setRecovered((current) => [...current.slice(-9), event.error]);
@@ -715,6 +725,7 @@ export function AgentProvider(props: AgentProviderProps) {
           {
             id: errorId,
             kind: "error",
+            at: Date.now(),
             error: { code: "TRANSPORT_FAILED", message: (error as Error).message },
           },
         ]);
@@ -797,7 +808,8 @@ export function AgentProvider(props: AgentProviderProps) {
       const text = message.trim();
       if (!text) return;
       lastUserMessage.current = text;
-      setItems((current) => [...current, { id: nextId("user"), kind: "user", text }]);
+      const userId = nextId("user");
+      setItems((current) => [...current, { id: userId, kind: "user", at: Date.now(), text }]);
       const pending = pendingQuestion.current;
       pendingQuestion.current = undefined;
       await consume({

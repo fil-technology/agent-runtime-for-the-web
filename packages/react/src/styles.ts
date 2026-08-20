@@ -50,26 +50,36 @@ export const agentStyles = `
   box-shadow: 0 24px 60px rgba(0,0,0,.18); display: flex; flex-direction: column; overflow: hidden;
 }
 .ar-header {
-  display: flex; align-items: center; gap: 8px; padding: 12px 14px; flex: 0 0 auto;
-  border-bottom: 1px solid var(--ar-line); font-size: 14px; font-weight: 600;
+  display: flex; align-items: center; gap: 9px; padding: 11px 14px; flex: 0 0 auto;
+  border-bottom: 1px solid var(--ar-line);
 }
-.ar-header-spacer { flex: 1; }
+.ar-brand {
+  display: grid; place-items: center; width: 28px; height: 28px; flex: none;
+  border-radius: 8px; background: var(--ar-surface); color: var(--ar-fg);
+}
+.ar-titles { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; line-height: 1.25; }
+.ar-title { font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ar-subtitle {
+  font-size: 11px; color: var(--ar-muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ar-header-spacer { flex: 0 0 4px; }
 .ar-chip {
   font-size: 11px; font-weight: 500; color: var(--ar-muted); border: 1px solid var(--ar-line);
   border-radius: 999px; padding: 2px 8px; white-space: nowrap;
 }
 .ar-icon-button {
   border: none; background: transparent; color: var(--ar-muted); cursor: pointer;
-  font-size: 13px; padding: 4px 6px; border-radius: 6px;
+  font-size: 12.5px; padding: 4px 6px; border-radius: 6px;
+  white-space: nowrap; flex: none;
 }
 .ar-icon-button:hover { background: var(--ar-surface); color: var(--ar-fg); }
 /* min-height:0 is load-bearing: without it a flex child grows to fit its
    content instead of scrolling, and the transcript silently overflows. */
 .ar-powered {
-  display: flex; align-items: center; justify-content: center; gap: 5px;
-  padding: 7px 12px 9px; font-size: 11px; letter-spacing: .01em;
+  display: inline-flex; align-items: center; gap: 5px; flex: none;
+  font-size: 10.5px; letter-spacing: .01em;
   color: var(--ar-muted); text-decoration: none;
-  border-top: 1px solid var(--ar-line);
 }
 .ar-powered:hover { color: var(--ar-fg); }
 .ar-mark { flex: none; opacity: .85; }
@@ -101,16 +111,41 @@ export const agentStyles = `
   font-size: 11px;
 }
 .ar-messages { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
-.ar-empty { color: var(--ar-muted); font-size: 13px; line-height: 1.55; }
-.ar-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+/* The first thing anyone sees: say what this is, then get out of the way. */
+.ar-empty {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: 3px; padding: 26px 8px 8px; color: var(--ar-muted); font-size: 13px; line-height: 1.5;
+}
+.ar-empty-mark {
+  display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 9px;
+  border-radius: 14px; background: var(--ar-surface); color: var(--ar-fg);
+}
+.ar-empty-title { font-size: 16px; font-weight: 640; color: var(--ar-fg); }
+.ar-empty-lead { font-size: 13.5px; color: var(--ar-muted); }
+.ar-empty-note { font-size: 11.5px; opacity: .8; max-width: 34ch; margin-top: 4px; }
+.ar-suggestions {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; justify-content: center;
+}
 .ar-suggestion {
   border: 1px solid var(--ar-line); background: var(--ar-bg); color: var(--ar-fg);
   border-radius: 999px; padding: 5px 10px; font-size: 12px; cursor: pointer;
 }
 .ar-suggestion:hover { border-color: var(--ar-accent); }
-.ar-msg { flex: 0 0 auto; font-size: 14px; line-height: 1.5; max-width: 88%; padding: 9px 12px; border-radius: 10px; white-space: pre-wrap; word-break: break-word; }
-.ar-msg-user { align-self: flex-end; background: var(--ar-accent); color: var(--ar-accent-fg); }
-.ar-msg-assistant { align-self: flex-start; background: var(--ar-surface); }
+/* A turn is who spoke, when, and what they said. */
+.ar-turn { display: flex; flex-direction: column; gap: 4px; flex: 0 0 auto; }
+.ar-turn-meta {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  font-size: 10.5px; color: var(--ar-muted);
+}
+.ar-turn-time { opacity: .75; white-space: nowrap; }
+.ar-said { display: flex; align-items: flex-start; gap: 7px; }
+.ar-avatar {
+  display: grid; place-items: center; width: 20px; height: 20px; flex: none;
+  margin-top: 5px; border-radius: 7px; background: var(--ar-surface); color: var(--ar-fg);
+}
+.ar-msg { flex: 0 1 auto; font-size: 14px; line-height: 1.5; max-width: 88%; padding: 9px 12px; border-radius: 12px; white-space: pre-wrap; word-break: break-word; }
+.ar-msg-user { align-self: flex-end; background: var(--ar-accent); color: var(--ar-accent-fg); border-bottom-right-radius: 4px; }
+.ar-msg-assistant { align-self: flex-start; background: var(--ar-surface); border-bottom-left-radius: 4px; }
 .ar-cursor { display: inline-block; width: 7px; animation: ar-blink 1s steps(2) infinite; }
 @keyframes ar-blink { 50% { opacity: 0 } }
 .ar-card { flex: 0 0 auto; border: 1px solid var(--ar-line); border-radius: 10px; padding: 12px; background: var(--ar-bg); font-size: 13px; }
@@ -196,12 +231,29 @@ export const agentStyles = `
 .ar-error { border: 1px solid color-mix(in srgb, var(--ar-danger) 45%, var(--ar-line)); border-radius: 10px; padding: 10px 12px; font-size: 12.5px; }
 .ar-error-title { color: var(--ar-danger); font-weight: 600; margin-bottom: 4px; }
 .ar-error pre { margin: 6px 0 0; white-space: pre-wrap; font-size: 11.5px; color: var(--ar-muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-.ar-composer { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--ar-line); flex: 0 0 auto; }
-.ar-input {
-  flex: 1; border: 1px solid var(--ar-line); border-radius: 9px; padding: 9px 11px;
-  font: inherit; font-size: 14px; background: var(--ar-bg); color: var(--ar-fg); resize: none; max-height: 120px;
+/* One field, one round button — the composer should look like somewhere to
+   write, not a form to fill in. */
+.ar-composer {
+  display: flex; align-items: flex-end; gap: 8px; margin: 10px 12px 0; padding: 8px 8px 8px 12px;
+  border: 1px solid var(--ar-line); border-radius: 16px; background: var(--ar-bg); flex: 0 0 auto;
 }
-.ar-input:focus { outline: 2px solid color-mix(in srgb, var(--ar-accent) 40%, transparent); outline-offset: 1px; }
+.ar-composer:focus-within { border-color: color-mix(in srgb, var(--ar-accent) 55%, var(--ar-line)); }
+.ar-input {
+  flex: 1; border: none; padding: 7px 0; font: inherit; font-size: 14px; line-height: 1.45;
+  background: none; color: var(--ar-fg); resize: none; max-height: 132px;
+}
+.ar-input:focus { outline: none; }
+.ar-send {
+  display: grid; place-items: center; width: 32px; height: 32px; flex: none;
+  border: none; border-radius: 999px; cursor: pointer; font-size: 15px; line-height: 1;
+  background: var(--ar-accent); color: var(--ar-accent-fg);
+}
+.ar-send:disabled { background: var(--ar-surface); color: var(--ar-muted); cursor: default; }
+.ar-footer {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 8px 14px 10px; flex: 0 0 auto;
+}
+.ar-hint { font-size: 10.5px; color: var(--ar-muted); opacity: .8; white-space: nowrap; }
 .ar-debug { border-top: 1px solid var(--ar-line); max-height: 240px; overflow-y: auto; background: var(--ar-surface); padding: 10px 12px; font-size: 11.5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ar-muted); }
 .ar-debug-row { display: flex; gap: 8px; justify-content: space-between; padding: 1px 0; }
 .ar-debug-h { color: var(--ar-fg); font-weight: 600; margin: 8px 0 3px; }

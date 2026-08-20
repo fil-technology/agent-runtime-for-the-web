@@ -458,3 +458,10 @@ A durable operation is still just an action. An executor can back one later with
   "member" there is not a choice of role — but navigate's examples name several
   destinations, which is the enum being taught. One value mentioned means prose;
   several mean demonstration.
+- **State updaters must be pure — verify the UI in `next dev`, not `next start`.** React
+  double-invokes `setState` updaters under StrictMode to catch impure ones. An updater that set
+  a closure flag ("have I added the bubble yet?") took the wrong branch on the second run and
+  silently dropped every assistant message. It was invisible in a production build, which is how
+  it shipped. Existence is now read from the state passed in, never from a flag.
+- **An affordance hidden behind `:hover` does not exist on a phone.** The "Open →" link on a
+  result row was `opacity: 0` until hover — on touch there is no hover, so the row looked inert.

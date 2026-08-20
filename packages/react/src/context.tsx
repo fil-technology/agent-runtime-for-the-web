@@ -496,7 +496,6 @@ export function AgentProvider(props: AgentProviderProps) {
         pendingQuestion.current = undefined;
       }
       const assistantId = nextId("msg");
-      let opened = false;
       let sawProposal = false;
       let shownAsElements: string | undefined;
       let pendingSources: AnswerSource[] | undefined;
@@ -541,8 +540,12 @@ export function AgentProvider(props: AgentProviderProps) {
             case "delta":
               setStatus("streaming");
               setItems((current) => {
-                if (!opened) {
-                  opened = true;
+                // Whether the bubble exists is read from `current`, never from a
+                // flag set inside this function. React invokes state updaters
+                // twice under StrictMode to catch exactly this: a second run
+                // would see the flag already set, take the update branch, find
+                // nothing to update, and silently drop the message.
+                if (!current.some((i) => i.id === assistantId)) {
                   return [
                     ...current,
                     { id: assistantId, kind: "assistant", text: event.text, streaming: true },
@@ -560,8 +563,7 @@ export function AgentProvider(props: AgentProviderProps) {
               // underneath is noise, not confirmation.
               if (shownAsElements && restates(event.text, shownAsElements)) break;
               setItems((current) => {
-                if (!opened) {
-                  opened = true;
+                if (!current.some((i) => i.id === assistantId)) {
                   return [
                     ...current,
                     {
@@ -659,9 +661,10 @@ export function AgentProvider(props: AgentProviderProps) {
               // panel, not in the conversation as a failure the user has to
               // interpret.
               if (!event.error.recoverable) {
+                const errorId = nextId("err");
                 setItems((current) => [
                   ...current,
-                  { id: nextId("err"), kind: "error", error: event.error },
+                  { id: errorId, kind: "error", error: event.error },
                 ]);
               }
               setRecovered((current) => [...current.slice(-9), event.error]);
@@ -678,10 +681,11 @@ export function AgentProvider(props: AgentProviderProps) {
           }
         }
       } catch (error) {
+        const errorId = nextId("err");
         setItems((current) => [
           ...current,
           {
-            id: nextId("err"),
+            id: errorId,
             kind: "error",
             error: { code: "TRANSPORT_FAILED", message: (error as Error).message },
           },

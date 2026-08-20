@@ -244,3 +244,67 @@ createLocalProvider({
 })
 createEngine, hasWebGpu, loadTransformers
 ```
+
+## Customising the chat UI
+
+Three levels, in order of how much you take on.
+
+### 1. Props
+
+```tsx
+<AgentChat
+  title="QuakeMate"
+  placeholder="Ask about earthquakes, tsunamis or volcanoes"
+  suggestions={["Is there a tsunami warning right now?", "Earthquakes in Japan this week"]}
+  launcherLabel="Ask QuakeMate"
+  defaultOpen={false}
+/>
+```
+
+### 2. CSS variables and classes
+
+Every colour comes from a variable on `.ar-root`, so restyling is a few lines in your own
+stylesheet — no fork, no props threading:
+
+```css
+.ar-root {
+  --ar-accent: #ff3b30;      /* buttons, links, the "Open →" affordance */
+  --ar-accent-fg: #ffffff;
+  --ar-bg: #14161a;          /* panel background */
+  --ar-fg: #f2f3f5;          /* text */
+  --ar-muted: #9aa1ad;       /* secondary text */
+  --ar-line: #272b32;        /* borders */
+  --ar-surface: #1b1e24;     /* cards, assistant bubbles */
+  --ar-danger: #d33b3b;
+  --ar-radius: 12px;
+  --ar-font: "Your Font", system-ui, sans-serif;
+}
+```
+
+Dark mode is `prefers-color-scheme` by default; override the same variables under your own
+selector to control it yourself.
+
+Every element carries a stable class — `.ar-panel`, `.ar-messages`, `.ar-msg-user`,
+`.ar-msg-assistant`, `.ar-result`, `.ar-result-row`, `.ar-choice`, `.ar-proposal`,
+`.ar-composer`, `.ar-launcher` — so you can restyle any part without touching the markup.
+`injectStyles` only inserts the stylesheet once and never overrides a rule you wrote later.
+
+### 3. Your own UI
+
+`useAgent()` is the whole thing headless. `<AgentChat>` is written against this and nothing
+more, so anything it does, your own component can do:
+
+```tsx
+const { items, status, send, approve, decline, open, modelStatus } = useAgent();
+```
+
+- `items` — the conversation: `user` | `assistant` | `result` | `proposal` | `error`
+- `send(text)` — ask something
+- `approve(id)` / `decline(id)` — answer a confirmation card
+- `status` — `idle` | `thinking` | `streaming` | `awaiting-confirmation`
+
+Keep `<AgentProvider>`: it owns the transport, conversation persistence, the pending
+clarification and the client-action bridge. Replacing it means reimplementing those.
+
+**Do not fork `AgentChat` to change colours or copy.** Levels 1 and 2 survive upgrades; a fork
+does not.

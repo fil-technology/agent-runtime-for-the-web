@@ -144,8 +144,12 @@ export const agentStyles = `
 .ar-result-row { padding: 9px 12px; border-bottom: 1px solid var(--ar-line); }
 .ar-result-link { display: block; width: 100%; text-align: left; background: none; border: none; border-bottom: 1px solid var(--ar-line); color: inherit; font: inherit; cursor: pointer; position: relative; }
 .ar-result-link:hover { background: var(--ar-surface); }
-.ar-result-link:hover .ar-result-go { opacity: 1; }
-.ar-result-go { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 11.5px; color: var(--ar-accent); opacity: 0; transition: opacity .12s ease; }
+.ar-result-link:hover .ar-result-go, .ar-result-link:focus-visible .ar-result-go { opacity: 1; }
+/* Visible without hovering. A row that can be opened has to look like one
+   before you touch it — on a phone there is no hover to reveal it with. */
+.ar-result-go { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 11.5px; color: var(--ar-accent); opacity: .75; transition: opacity .12s ease; }
+/* The label must not run underneath the affordance. */
+.ar-result-link .ar-result-label, .ar-result-link .ar-result-meta { padding-right: 56px; }
 .ar-result-row:last-child { border-bottom: none; }
 .ar-result-label { font-size: 13.5px; font-weight: 550; }
 .ar-result-meta { font-size: 11.5px; color: var(--ar-muted); margin-top: 2px; }

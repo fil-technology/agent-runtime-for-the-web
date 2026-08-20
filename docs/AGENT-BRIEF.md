@@ -10,6 +10,11 @@ It is written to be self-contained — paste it as the task.
 Integrate **Agent Runtime for the Web** into this application so it can be operated through
 language, without the language model ever owning product truth or authorization.
 
+**The deliverable is working code in this repository** — new source files that run. This
+document is the specification for that work, not a document to reproduce, summarise or
+republish. Do not produce artifacts, plans, README files or summary pages at any point.
+Where a step below says "report back", it means a short message in the chat.
+
 ### 1. Install
 
 ```bash

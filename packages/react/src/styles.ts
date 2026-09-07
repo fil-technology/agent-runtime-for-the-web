@@ -39,8 +39,8 @@ export const agentStyles = `
 }
 /* The page layout fills what it is given rather than positioning itself, so it
    drops into a host layout that already has a header without fighting it. */
-.ar-root-page { position: static; inset: auto; width: 100%; height: 100%; }
-.ar-page { display: flex; height: 100%; min-height: 0; background: var(--ar-bg); }
+.ar-root-page { position: static; inset: auto; width: 100%; height: 100%; min-width: 0; max-width: 100%; overflow: hidden; }
+.ar-page { display: flex; height: 100%; min-height: 0; min-width: 0; background: var(--ar-bg); }
 .ar-side {
   flex: 0 0 240px; display: flex; flex-direction: column; min-height: 0;
   border-right: 1px solid var(--ar-line); background: var(--ar-surface); padding: 12px;
@@ -64,12 +64,15 @@ export const agentStyles = `
 .ar-page-foot .ar-column { gap: 0; }
 .ar-page-foot .ar-composer { margin: 0; }
 .ar-empty-page { padding-top: 12vh; }
-@media (max-width: 760px) {
-  .ar-side { display: none; }
-  .ar-page-messages { padding: 14px 14px 6px; }
-  .ar-page-header { padding: 12px 14px; }
-  .ar-page-foot { padding: 0 14px 4px; }
+/* Shown only where the sidebar is not: the way back to past conversations. */
+.ar-only-narrow { display: none; }
+.ar-sheet {
+  position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column;
+  background: var(--ar-bg); padding: 12px; gap: 10px;
 }
+.ar-sheet .ar-history { border: none; background: none; padding: 0; max-height: none; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.ar-page-body { position: relative; flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+
 .ar-launcher {
   border: 1px solid var(--ar-line); background: var(--ar-bg); color: var(--ar-fg);
   border-radius: 999px; padding: 10px 18px; font-size: 14px; font-weight: 550;
@@ -292,6 +295,29 @@ export const agentStyles = `
 .ar-debug-h { color: var(--ar-fg); font-weight: 600; margin: 8px 0 3px; }
 .ar-debug-h:first-child { margin-top: 0; }
 .ar-kv { color: var(--ar-fg); }
+
+/* ---- small screens: last, so these win the specificity tie ---- */
+@media (max-width: 760px) {
+  .ar-side { display: none; }
+  .ar-only-narrow { display: inline-flex; }
+  .ar-page-messages { padding: 14px 14px 6px; }
+  .ar-page-header { padding: 12px 14px; }
+  .ar-page-foot { padding: 0 14px 4px; }
+  /* Below 16px, iOS Safari zooms the whole page when the field takes focus. */
+  .ar-input { font-size: 16px; }
+  .ar-send { width: 36px; height: 36px; }
+  /* "Shift ↵ for a new line" is not true on a touch keyboard, and it is what
+     runs into the attribution when the footer has no room. */
+  .ar-hint { display: none; }
+  .ar-footer { justify-content: flex-end; }
+  .ar-empty-page { padding-top: 8vh; }
+  /* A subtitle cut to "Ask about this p…" tells nobody anything, and it is
+     costing the title the room it needs. The empty state already says what
+     this assistant is for. */
+  .ar-subtitle { display: none; }
+  .ar-header, .ar-page-header { gap: 6px; }
+  .ar-icon-button { padding: 4px 6px; }
+}
 `;
 
 let injected = false;

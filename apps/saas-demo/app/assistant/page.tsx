@@ -11,7 +11,7 @@ import { AgentPage } from "@agent-runtime/react";
  */
 export default function AssistantPage() {
   return (
-    <div style={{ height: "calc(100vh - 48px)", margin: "-24px", display: "flex" }}>
+    <div className="assistant-fill">
       <AgentPage
         title="Northwind Assistant"
         subtitle="Ask about your account, projects and billing"

@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.3.1
+
+Small screens. Reported from a real integration, reproduced at 375px, and measured
+rather than eyeballed.
+
+### Fixed
+
+- **Tapping the composer zoomed the whole page on iOS.** The input was 14px; Safari
+  zooms any field under 16px when it takes focus, and the page never zooms back. 16px
+  below the breakpoint. This affected both layouts on every iPhone.
+- **`<AgentPage>` had no way to reach past conversations on a phone.** The sidebar
+  carries both the conversation list and the "New chat" button, and it hides itself
+  below 760px — so a phone got neither. The header now offers a "chats" button there,
+  opening the list as a sheet with "New chat" in it. Above 760px nothing changes; the
+  sidebar is already the answer.
+- **The responsive rules were written before the base rules they override.** Equal
+  specificity means source order decides, so every small-screen declaration that had a
+  base counterpart silently lost — only `display: none` on a property nothing else set
+  appeared to work. The block now comes last, which is why the two fixes above take
+  effect at all.
+- **"Enter to send · Shift ↵ for a new line" is not true on a touch keyboard**, and its
+  `nowrap` was what collided with the attribution when the footer ran out of room. It
+  is hidden below the breakpoint; the attribution stays.
+- **A truncated subtitle read as "Ask about this p…"**, while costing the title the room
+  it needed. Hidden below the breakpoint — the empty state already says what the
+  assistant is for. The title then fits in a 375px panel.
+- The send button was 32px on touch, under every touch-target guideline. 36px below the
+  breakpoint.
+- `.ar-root-page` could contribute to a host page's horizontal overflow. It now carries
+  `min-width: 0; max-width: 100%; overflow: hidden` — a component dropped into a layout
+  we have never seen should not be able to push it wider.
+
+Verified at 375x812 and 1280: no horizontal scroll in either layout, and the desktop
+rendering is byte-for-byte what 0.3.0 gave.
+
 ## 0.3.0
 
 ### Added

@@ -50,6 +50,7 @@ export function AgentPage(props: AgentPageProps) {
   const agent = useAgent();
   const [draft, setDraft] = useState("");
   const [showDebug, setShowDebug] = useState(false);
+  const [showChats, setShowChats] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
   const following = useRef(true);
 
@@ -108,6 +109,15 @@ export function AgentPage(props: AgentPageProps) {
               </span>
             </span>
             <span className="ar-header-spacer" />
+            {withSidebar && (
+              <button
+                className="ar-icon-button ar-only-narrow"
+                onClick={() => setShowChats((v) => !v)}
+                title="Conversations"
+              >
+                {showChats ? "close" : "chats"}
+              </button>
+            )}
             {agent.modelStatus.local === "ready" && (
               <span className="ar-chip">
                 <span className="ar-chip-dot" />
@@ -127,39 +137,56 @@ export function AgentPage(props: AgentPageProps) {
 
           {agent.modelStatus.local === "loading" && <ModelLoader />}
 
-          <div className="ar-messages ar-page-messages" ref={scroller} onScroll={onScroll}>
-            <div className="ar-column">
-              {agent.items.length === 0 && (
-                <div className="ar-empty ar-empty-page">
-                  <span className="ar-empty-mark">
-                    <AgentRuntimeMark size={30} />
-                  </span>
-                  <span className="ar-empty-title">{title}</span>
-                  <span className="ar-empty-lead">How can I help you today?</span>
-                  <span className="ar-empty-note">
-                    I can only use this product's own documentation, data and actions.
-                  </span>
-                  {props.suggestions?.length ? (
-                    <div className="ar-suggestions">
-                      {props.suggestions.map((s) => (
-                        <button
-                          key={s}
-                          className="ar-suggestion"
-                          onClick={() => void agent.send(s)}
-                        >
-                          {s}
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              )}
+          <div className="ar-page-body">
+            {showChats && (
+              <div className="ar-sheet">
+                <button
+                  className="ar-new"
+                  onClick={() => {
+                    agent.newConversation();
+                    setShowChats(false);
+                  }}
+                >
+                  ＋ New chat
+                </button>
+                <ConversationList onPick={() => setShowChats(false)} />
+              </div>
+            )}
 
-              {agent.items.map((item) => (
-                <Item key={item.id} item={item} agentName={title} />
-              ))}
+            <div className="ar-messages ar-page-messages" ref={scroller} onScroll={onScroll}>
+              <div className="ar-column">
+                {agent.items.length === 0 && (
+                  <div className="ar-empty ar-empty-page">
+                    <span className="ar-empty-mark">
+                      <AgentRuntimeMark size={30} />
+                    </span>
+                    <span className="ar-empty-title">{title}</span>
+                    <span className="ar-empty-lead">How can I help you today?</span>
+                    <span className="ar-empty-note">
+                      I can only use this product's own documentation, data and actions.
+                    </span>
+                    {props.suggestions?.length ? (
+                      <div className="ar-suggestions">
+                        {props.suggestions.map((s) => (
+                          <button
+                            key={s}
+                            className="ar-suggestion"
+                            onClick={() => void agent.send(s)}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                )}
 
-              {agent.status === "thinking" && <Thinking />}
+                {agent.items.map((item) => (
+                  <Item key={item.id} item={item} agentName={title} />
+                ))}
+
+                {agent.status === "thinking" && <Thinking />}
+              </div>
             </div>
           </div>
 
